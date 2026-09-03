@@ -98,7 +98,7 @@ export function ScoreGauge({ score, size = 76 }: { score: number; size?: number 
   const radius = (size - 10) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (Math.min(Math.max(score, 0), 100) / 100) * circumference;
-  const color = score >= 75 ? "var(--acid)" : score >= 50 ? "var(--signal)" : "var(--flame)";
+  const color = score >= 75 ? "url(#ig-gradient)" : score >= 50 ? "var(--signal)" : "var(--flame)";
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -142,8 +142,8 @@ export function Button({
   return (
     <button
       className={cn(
-        "tape-label inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-[11px] transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-        variant === "primary" && "bg-acid text-ink hover:bg-paper",
+        "tape-label inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-[11px] transition-opacity disabled:cursor-not-allowed disabled:opacity-40",
+        variant === "primary" && "bg-grad-ig text-white hover:opacity-90",
         variant === "outline" && "border border-line-strong text-paper hover:border-acid hover:text-acid",
         variant === "ghost" && "text-paper/70 hover:text-paper",
         className

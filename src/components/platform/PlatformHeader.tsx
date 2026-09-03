@@ -21,7 +21,7 @@ export function PlatformHeader({
         <p className="tape-label mb-4" style={{ color: cfg.colorA }}>
           {eyebrow}
         </p>
-        <h1 className="font-display text-5xl italic leading-none text-paper sm:text-6xl">
+        <h1 className="font-display text-5xl font-bold leading-none text-paper sm:text-6xl">
           {title}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper/60">{description}</p>

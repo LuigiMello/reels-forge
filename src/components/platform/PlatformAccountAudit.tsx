@@ -59,7 +59,7 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
             <Card className="flex flex-col items-center gap-3 text-center">
               <ScoreGauge score={audit.overallScore} size={110} />
               <p className="tape-label text-paper/50">Score geral da conta</p>
-              <p className="font-display text-lg italic text-paper">{audit.handle}</p>
+              <p className="font-display text-lg font-bold text-paper">{audit.handle}</p>
             </Card>
 
             <Card>

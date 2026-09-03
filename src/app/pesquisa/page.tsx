@@ -20,8 +20,8 @@ export default function PesquisaPage() {
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-flame" />
             atualizado automaticamente — {todayLabel()}
           </p>
-          <h1 className="font-display text-5xl italic leading-none text-paper sm:text-6xl">
-            Pesquisa de virais <span className="text-acid">do dia</span>
+          <h1 className="font-display text-5xl font-bold leading-none text-paper sm:text-6xl">
+            Pesquisa de virais <span className="text-grad-ig">do dia</span>
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper/60">
             Ranking gerado automaticamente todos os dias com os conteúdos de maior views,

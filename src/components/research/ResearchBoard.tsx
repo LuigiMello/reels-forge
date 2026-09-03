@@ -93,7 +93,7 @@ export function ResearchBoard({ all }: { all: Record<Platform, ViralPost[]> }) {
               onClick={() => setMetricsMode("separadas")}
               className={cn(
                 "tape-label px-3 py-2 text-[10px] transition-colors",
-                metricsMode === "separadas" ? "bg-acid text-ink" : "text-paper/60"
+                metricsMode === "separadas" ? "bg-grad-ig text-white" : "text-paper/60"
               )}
             >
               Métricas separadas
@@ -102,7 +102,7 @@ export function ResearchBoard({ all }: { all: Record<Platform, ViralPost[]> }) {
               onClick={() => setMetricsMode("combinada")}
               className={cn(
                 "tape-label px-3 py-2 text-[10px] transition-colors",
-                metricsMode === "combinada" ? "bg-acid text-ink" : "text-paper/60"
+                metricsMode === "combinada" ? "bg-grad-ig text-white" : "text-paper/60"
               )}
             >
               Métricas combinadas
@@ -138,9 +138,9 @@ function FilterButton({
       onClick={onClick}
       className={cn(
         "tape-label border px-3 py-2 text-[10px] transition-colors",
-        active ? "text-ink" : "border-line-strong text-paper/60 hover:text-paper"
+        active ? cn("border-transparent text-white", !accent && "bg-grad-ig") : "border-line-strong text-paper/60 hover:text-paper"
       )}
-      style={active ? { background: accent ?? "var(--acid)", borderColor: accent ?? "var(--acid)" } : undefined}
+      style={active && accent ? { background: accent, borderColor: accent } : undefined}
     >
       {children}
     </button>

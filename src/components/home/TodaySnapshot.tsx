@@ -26,7 +26,7 @@ export function TodaySnapshot() {
 
               <div>
                 <p className="text-sm text-paper/50">{top.handle}</p>
-                <p className="mt-1 font-display text-xl italic leading-snug text-paper">
+                <p className="mt-1 font-display text-xl font-bold leading-snug text-paper">
                   “{top.hook}”
                 </p>
               </div>

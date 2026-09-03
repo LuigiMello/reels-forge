@@ -9,14 +9,16 @@
   --line: rgba(244, 238, 223, 0.12);
   --line-strong: rgba(244, 238, 223, 0.22);
 
-  /* accents */
-  --acid: #d7ff3f;
-  --flame: #ff5a36;
-  --signal: #6f97ff;
+  /* brand accent — Instagram-style gradient, used across the whole app */
+  --acid: #e1306c;
+  --flame: #fa7e1e;
+  --signal: #833ab4;
+  --grad-ig-text: linear-gradient(115deg, #4f5bd5 0%, #962fbf 28%, #d62976 55%, #fa7e1e 78%, #feda75 100%);
+  --grad-ig-solid: linear-gradient(115deg, #405de6 0%, #833ab4 38%, #c13584 68%, #e1306c 100%);
 
   /* platform accents (used sparingly as chips/badges only) */
-  --ig-1: #f0426b;
-  --ig-2: #f8993b;
+  --ig-1: #d62976;
+  --ig-2: #fa7e1e;
   --tt-1: #22e6de;
   --tt-2: #fe2c55;
   --yt-1: #ff3b30;
@@ -91,7 +93,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), system-ui, sans-serif;
 }
 
 .hairline {
@@ -135,4 +137,24 @@ body {
 
 .marquee-track-slow {
   animation-duration: 60s;
+}
+
+@keyframes wall-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.text-grad-ig {
+  background: var(--grad-ig-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.bg-grad-ig {
+  background: var(--grad-ig-solid);
 }

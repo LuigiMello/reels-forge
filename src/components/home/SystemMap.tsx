@@ -49,12 +49,12 @@ export function SystemMap() {
             className="group relative flex flex-col gap-4 bg-ink p-8 transition-colors hover:bg-ink-2"
           >
             <div className="flex items-center justify-between">
-              <span className="font-display text-4xl italic text-paper/20 transition-colors group-hover:text-acid">
+              <span className="font-display text-4xl font-bold text-paper/20 transition-colors group-hover:text-acid">
                 {n}
               </span>
               <Icon size={20} strokeWidth={1.5} className="text-paper/40 group-hover:text-paper" />
             </div>
-            <h3 className="font-display text-2xl italic text-paper">{title}</h3>
+            <h3 className="font-display text-2xl font-bold text-paper">{title}</h3>
             <p className="text-sm leading-relaxed text-paper/60">{desc}</p>
             <span className="tape-label mt-2 inline-flex items-center gap-1.5 text-paper/50 group-hover:text-acid">
               {cta}

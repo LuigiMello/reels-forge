@@ -48,7 +48,7 @@ export function ScriptBuilder() {
                   onClick={() => setPlatform(p)}
                   className={cn(
                     "tape-label flex-1 border px-2 py-2.5 text-[10px] transition-colors",
-                    active ? "text-ink" : "border-line-strong text-paper/60"
+                    active ? "text-white" : "border-line-strong text-paper/60"
                   )}
                   style={active ? { background: cfg.colorA, borderColor: cfg.colorA } : undefined}
                 >
@@ -136,7 +136,7 @@ export function ScriptBuilder() {
                   <Chip color={PLATFORM_CONFIG[script.platform].colorA}>
                     {PLATFORM_CONFIG[script.platform].name}
                   </Chip>
-                  <h2 className="mt-3 font-display text-2xl italic text-paper">{script.title}</h2>
+                  <h2 className="mt-3 font-display text-2xl font-bold text-paper">{script.title}</h2>
                 </div>
                 <button
                   onClick={generate}

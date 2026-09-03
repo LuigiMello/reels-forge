@@ -68,6 +68,21 @@ function buildHandle(rng: Rng, name: string): string {
   return `@${name.toLowerCase()}.${suffix}${num}`;
 }
 
+const CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+function buildShortCode(rng: Rng, length = 11): string {
+  let out = "";
+  for (let i = 0; i < length; i++) out += CODE_CHARS[rng.int(0, CODE_CHARS.length - 1)];
+  return out;
+}
+
+function buildUrl(rng: Rng, platform: Platform, handle: string): string {
+  const bareHandle = handle.replace(/^@/, "");
+  if (platform === "instagram") return `https://www.instagram.com/reel/${buildShortCode(rng)}/`;
+  if (platform === "tiktok") return `https://www.tiktok.com/@${bareHandle}/video/7${rng.int(100000000000000000, 399999999999999999)}`;
+  return `https://www.youtube.com/shorts/${buildShortCode(rng)}`;
+}
+
 function buildOnePost(rng: Rng, platform: Platform, index: number, dateKey: string): ViralPost {
   const niche = rng.pick(NICHES);
   const name = rng.pick(FIRST_NAMES);
@@ -101,6 +116,8 @@ function buildOnePost(rng: Rng, platform: Platform, index: number, dateKey: stri
     raw,
     derived,
     thumbnailSeed: `${platform}-${index}-${dateKey}`,
+    url: buildUrl(rng, platform, handle),
+    thumbHue: rng.int(0, 359),
   };
 }
 

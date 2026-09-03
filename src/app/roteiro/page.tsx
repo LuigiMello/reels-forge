@@ -10,8 +10,8 @@ export default function RoteiroPage() {
       <header className="border-b border-line px-6 py-16">
         <div className="mx-auto max-w-6xl">
           <p className="tape-label mb-4 text-flame">ateliê de roteiro</p>
-          <h1 className="font-display text-5xl italic leading-none text-paper sm:text-6xl">
-            Monte seu <span className="text-acid">roteiro viral</span>
+          <h1 className="font-display text-5xl font-bold leading-none text-paper sm:text-6xl">
+            Monte seu <span className="text-grad-ig">roteiro viral</span>
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper/60">
             Escolha a plataforma, o nicho e o ângulo da história — a Reels Forge monta hook,

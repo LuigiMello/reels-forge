@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Manrope, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SideDock } from "@/components/layout/SideDock";
 import { TopTicker } from "@/components/layout/TopTicker";
 import { GrainOverlay } from "@/components/layout/GrainOverlay";
+import { GradientDefs } from "@/components/layout/GradientDefs";
 
-const display = Instrument_Serif({
+const display = Bricolage_Grotesque({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const sans = Space_Grotesk({
+const sans = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -37,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-ink text-paper font-sans">
+        <GradientDefs />
         <GrainOverlay />
         <TopTicker />
         <div className="flex">

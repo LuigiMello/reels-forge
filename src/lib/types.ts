@@ -46,6 +46,8 @@ export interface ViralPost {
   raw: RawMetrics;
   derived: DerivedMetrics;
   thumbnailSeed: string;
+  url: string;
+  thumbHue: number; // 0-360, drives the preview gradient placeholder
 }
 
 export interface AccountAudit {

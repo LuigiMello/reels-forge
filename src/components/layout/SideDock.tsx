@@ -32,7 +32,7 @@ export function SideDock() {
       >
         <Link
           href="/"
-          className="mb-8 font-display text-2xl italic leading-none text-acid"
+          className="text-grad-ig mb-8 font-display text-2xl font-bold leading-none"
           aria-label="Reels Forge — início"
         >
           RF
