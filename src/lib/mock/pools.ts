@@ -1,0 +1,105 @@
+export const NICHES = [
+  "Finanças pessoais",
+  "Humor cotidiano",
+  "Fitness & treino",
+  "Culinária rápida",
+  "Relacionamentos",
+  "Produtividade",
+  "Moda & estilo",
+  "Pets",
+  "Empreendedorismo",
+  "Beleza & skincare",
+  "Viagem",
+  "Tecnologia",
+  "Maternidade/Paternidade",
+  "Curiosidades",
+  "Games",
+  "Motivacional",
+  "Storytime",
+  "Dança",
+] as const;
+
+export const HOOK_TEMPLATES = [
+  "Ninguém te conta isso sobre {niche}...",
+  "Parei de fazer isso e minha vida mudou",
+  "3 segundos pra você não fechar esse vídeo",
+  "Isso aqui deveria ser ilegal",
+  "Eu testei por 30 dias e o resultado foi bizarro",
+  "Se você faz isso, para agora",
+  "O erro que 90% das pessoas cometem em {niche}",
+  "Isso vai contra tudo que te ensinaram sobre {niche}",
+  "Gravei escondido pra vocês verem isso",
+  "A parte 2 desse vídeo vai te deixar sem palavras",
+  "Não é sobre sorte, é sobre isso aqui",
+  "Só quem já passou por isso vai entender",
+  "Fiz o oposto do que todo mundo faz e deu certo",
+  "Isso mudou completamente como eu vejo {niche}",
+  "Guarda esse vídeo antes que ele suma",
+] as const;
+
+export const SOUND_POOL = [
+  "áudio original — tendência local",
+  "som viral #1 da semana",
+  "remix acelerado em alta",
+  "trilha original do criador",
+  "voz sobreposta + trend de áudio",
+  "som de suspense (usado em 40k vídeos)",
+  "faixa lo-fi com corte seco no beat",
+  "áudio de reação em alta",
+] as const;
+
+export const FIRST_NAMES = [
+  "Ana",
+  "Bruno",
+  "Camila",
+  "Diego",
+  "Elis",
+  "Felipe",
+  "Gabi",
+  "Henrique",
+  "Isa",
+  "João",
+  "Karol",
+  "Léo",
+  "Marina",
+  "Nina",
+  "Otávio",
+  "Paula",
+  "Rafa",
+  "Sofia",
+  "Thiago",
+  "Vitória",
+] as const;
+
+export const HANDLE_SUFFIXES = [
+  "oficial",
+  "real",
+  "creator",
+  "diario",
+  "tv",
+  "content",
+  "studio",
+  "br",
+  "vlog",
+  "show",
+] as const;
+
+export const CTA_POOL = [
+  "Salva esse vídeo pra assistir depois",
+  "Comenta AQUI se você já passou por isso",
+  "Compartilha com aquela pessoa que precisa ver isso",
+  "Segue pra parte 2 amanhã",
+  "Manda esse vídeo pro grupo",
+  "Deixa o like que a próxima parte eu solto amanhã",
+] as const;
+
+export const PRODUCTION_NOTES_POOL = [
+  "Grave o hook em close-up, sem cortes — a primeira impressão decide o scroll.",
+  "Use legenda dinâmica (palavra por palavra) para segurar quem assiste sem som.",
+  "Troque de plano a cada 2-3s para manter a retenção nos primeiros 8s.",
+  "Deixe o CTA falado E escrito na tela — reforço duplo aumenta comentários.",
+  "Evite logo/marca d'água nos primeiros 3s — a plataforma penaliza no alcance.",
+  "Grave em vertical nativo 9:16, não faça crop de horizontal.",
+  "Feche o vídeo com um loop visual que conecta com o primeiro frame.",
+  "Use uma pausa de 1s antes da virada — cria expectativa antes do payoff.",
+] as const;

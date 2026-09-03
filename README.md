@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Reels Forge
 
-## Getting Started
+Ateliê de roteiros virais para Reels (Instagram), TikTok e YouTube Shorts.
 
-First, run the development server:
+Todos os dias, sem precisar pedir, o app "pesquisa" automaticamente o que está
+viralizando nas três plataformas (views, curtidas, comentários, engajamento —
+separados e combinados), permite avaliar um vídeo específico ou uma conta, e
+monta roteiros completos (hook, blocos de tempo, legenda, hashtags, trilha e
+CTA) prontos para gravar.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
+Framer Motion · Recharts
+
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Como funciona a pesquisa diária
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Não há scraping real ligado ainda. Os dados são gerados por um simulador
+estatístico determinístico (`src/lib/mock`): a mesma data + plataforma sempre
+produz o mesmo ranking, então o app se comporta como se tivesse rodado uma
+pesquisa real todos os dias, sem banco de dados.
 
-## Learn More
+Para conectar dados reais:
 
-To learn more about Next.js, take a look at the following resources:
+1. Preencha as chaves em `.env.example` → `.env.local` (veja sugestões de
+   provedores nos comentários do arquivo).
+2. Implemente as chamadas reais em `src/lib/connectors/real-connector.ts`.
+3. Ligue a plataforma correspondente em `LIVE_ENABLED` dentro de
+   `src/lib/connectors/registry.ts`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Nenhuma outra parte do app precisa mudar — todas as páginas consomem os dados
+através de `getConnector(platform)`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estrutura
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app` — rotas (home, `/pesquisa`, `/roteiro`, e `/instagram`,
+  `/tiktok`, `/youtube` com subpáginas de avaliação de conteúdo e de conta).
+- `src/components` — UI (layout, home, research, platform, script).
+- `src/lib` — tipos, geração de dados mock, connectors, motor do builder de
+  roteiro e de auditoria de conteúdo/conta.
