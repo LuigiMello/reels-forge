@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import type { ViralPost } from "@/lib/types";
 import { PLATFORM_CONFIG } from "@/lib/platform-config";
-import { formatCompact, formatDuration, formatHoursAgo, formatPercent } from "@/lib/format";
+import { formatCompact, formatHoursAgo, formatPercent } from "@/lib/format";
 import { Chip, ScoreGauge } from "@/components/ui/primitives";
 import { VideoPreview } from "./VideoPreview";
 
@@ -104,38 +104,19 @@ export function TrendCard({
 
       <div className="border-t border-line p-4 pt-3">
         {metricsMode === "separadas" ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-2">
             <MetricPill label="Views" value={formatCompact(post.raw.views)} />
             <MetricPill icon={METRIC_ICONS.likes} label="Likes" value={formatCompact(post.raw.likes)} />
             <MetricPill icon={METRIC_ICONS.comments} label="Coment." value={formatCompact(post.raw.comments)} />
             <MetricPill icon={METRIC_ICONS.shares} label="Compart." value={formatCompact(post.raw.shares)} />
             <MetricPill icon={METRIC_ICONS.saves} label="Salvos" value={formatCompact(post.raw.saves)} />
-            <MetricPill label="Duração" value={formatDuration(post.raw.durationSec)} />
-            <MetricPill label="Retenção" value={formatPercent(post.derived.retentionRate)} />
             <MetricPill label="Engaj." value={formatPercent(post.derived.engagementRate)} />
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Zap size={14} className="text-acid" />
-              <span className="font-mono text-sm font-semibold text-paper">
-                {formatPercent(post.derived.engagementRate)}
-              </span>
-              <span className="tape-label text-paper/40">engaj. combinado</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <TimerReset size={14} className="text-signal" />
-              <span className="font-mono text-sm font-semibold text-paper">
-                {formatCompact(post.derived.velocityPerHour)}/h
-              </span>
-              <span className="tape-label text-paper/40">velocidade</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-mono text-sm font-semibold text-paper">
-                {formatCompact(post.raw.views)}
-              </span>
-              <span className="tape-label text-paper/40">views totais</span>
-            </div>
+          <div className="grid grid-cols-3 gap-2">
+            <MetricPill icon={Zap} label="Engaj. combinado" value={formatPercent(post.derived.engagementRate)} />
+            <MetricPill icon={TimerReset} label="Velocidade" value={`${formatCompact(post.derived.velocityPerHour)}/h`} />
+            <MetricPill label="Views totais" value={formatCompact(post.raw.views)} />
           </div>
         )}
       </div>
@@ -153,10 +134,12 @@ function MetricPill({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      {Icon && <Icon size={13} className="text-paper/40" />}
-      <span className="font-mono text-sm text-paper">{value}</span>
-      <span className="tape-label text-[9px] text-paper/40">{label}</span>
+    <div className="flex flex-col gap-1 border border-line bg-ink px-2.5 py-2">
+      <span className="tape-label flex items-center gap-1 text-[9px] text-paper/40">
+        {Icon && <Icon size={11} />}
+        {label}
+      </span>
+      <span className="font-mono text-sm font-semibold text-paper">{value}</span>
     </div>
   );
 }

@@ -15,16 +15,26 @@ const GLYPH: Record<ViralPost["platform"], typeof InstagramGlyph> = {
  * src/lib/connectors), so this renders a generated gradient "cover" using
  * the post's hook text instead of pretending to show a captured frame.
  */
+// Curated vivid pairs (indigo → violet → magenta → coral → orange), the
+// same family as the Instagram-style brand gradient — avoids the muddy
+// browns/olives that a raw hue rotation produces at arbitrary angles.
+const PREVIEW_PALETTES: [string, string][] = [
+  ["#2b2570", "#7b2ff7"],
+  ["#4f0f7a", "#c2266b"],
+  ["#6a11cb", "#c21e74"],
+  ["#c21e74", "#ff5b6a"],
+  ["#ff5b6a", "#ff9d3b"],
+  ["#1c3fae", "#7b2ff7"],
+];
+
 export function VideoPreview({ post, className }: { post: ViralPost; className?: string }) {
   const Glyph = GLYPH[post.platform];
-  const hue = post.thumbHue;
+  const [from, to] = PREVIEW_PALETTES[post.thumbHue % PREVIEW_PALETTES.length];
 
   return (
     <div
       className={cn("relative aspect-[9/16] w-full overflow-hidden", className)}
-      style={{
-        background: `linear-gradient(155deg, hsl(${hue} 65% 16%) 0%, hsl(${(hue + 40) % 360} 70% 24%) 55%, hsl(${(hue + 80) % 360} 75% 30%) 100%)`,
-      }}
+      style={{ background: `linear-gradient(155deg, ${from} 0%, ${to} 100%)` }}
     >
       <div
         className="absolute inset-0 opacity-40 mix-blend-overlay"
