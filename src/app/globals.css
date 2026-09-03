@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* base surfaces */
-  --ink: #0e0d0c;
-  --ink-2: #17140f;
-  --paper: #f4eee0;
-  --paper-dim: #e6ddc6;
-  --line: rgba(244, 238, 223, 0.12);
-  --line-strong: rgba(244, 238, 223, 0.22);
+  /* base surfaces — neutral cool dark, no warm/brown tint */
+  --ink: #0a0a0c;
+  --ink-2: #17181d;
+  --paper: #f2f2f0;
+  --paper-dim: #d8d8d4;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
 
   /* brand accent — Instagram-style gradient, used across the whole app */
   --acid: #e1306c;
