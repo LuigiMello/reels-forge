@@ -1,7 +1,7 @@
 import type { AiAccountAudit, AiContentAudit } from "../types";
 import type { AccountSignals } from "./account-signals";
 import type { ContentSignals } from "./content-signals";
-import { callClaude, extractJson } from "./anthropic";
+import { callLLM, extractJson } from "./llm";
 
 const HONESTY_RULE = `Regra inegociável: você NÃO assistiu ao vídeo nem tem acesso à conta em tempo real — só ao que estiver listado em "dados disponíveis" abaixo. Nunca finja ter visto o vídeo, ouvido o áudio ou lido a legenda/hashtags reais se eles não estiverem nos dados. Se um dado não existir, diga isso explicitamente no campo "dataNote"/notas e baseie a nota nesse critério em boas práticas gerais da plataforma, não em detalhes inventados. Seja um avaliador cético e direto, no estilo de uma ferramenta como o vidIQ: elogie só o que for justificado pelos dados reais, e seja honesto quando a avaliação for genérica por falta de dados.`;
 
@@ -51,7 +51,7 @@ ${CONTENT_SCHEMA}
 
 O campo "mode" deve ser "${mode}".`;
 
-  const raw = await callClaude({
+  const raw = await callLLM({
     system:
       "Você é um analista de conteúdo de vídeos curtos (Reels/TikTok/Shorts) rigoroso e direto, parecido com o vidIQ. Você responde sempre em JSON puro, nunca inventa dados que não recebeu.",
     user,
@@ -116,7 +116,7 @@ ${ACCOUNT_SCHEMA}
 
 O campo "mode" deve ser "${mode}".`;
 
-  const raw = await callClaude({
+  const raw = await callLLM({
     system:
       "Você é um analista de crescimento de contas de criadores de conteúdo (Instagram/TikTok/YouTube), rigoroso e direto, parecido com o vidIQ. Você responde sempre em JSON puro, nunca inventa dados que não recebeu.",
     user,

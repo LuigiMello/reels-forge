@@ -24,11 +24,18 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 ## Avaliação de vídeo/conta com IA real
 
-As páginas "Avaliar Reel/Vídeo/Short" e "Avaliar conta/canal" usam a API da
-Anthropic (Claude) de verdade — não são mock. A IA nunca finge ter assistido
-ao vídeo: ela só analisa o que consegue buscar publicamente, e é transparente
-sobre isso na própria resposta (`dataNote` + selo "dados reais" /
-"metadados públicos" / "orientação geral").
+As páginas "Avaliar Reel/Vídeo/Short" e "Avaliar conta/canal" usam IA de
+verdade — não são mock. Suporta três provedores (usa o primeiro que
+encontrar configurado, nesta ordem):
+
+1. **Google Gemini** (`GEMINI_API_KEY`) — gratuito, sem cartão de crédito.
+2. **Groq** (`GROQ_API_KEY`) — gratuito, sem cartão de crédito, modelos Llama.
+3. **Anthropic Claude** (`ANTHROPIC_API_KEY`) — pago (créditos grátis iniciais
+   em contas novas).
+
+A IA nunca finge ter assistido ao vídeo: ela só analisa o que consegue buscar
+publicamente, e é transparente sobre isso na própria resposta (`dataNote` +
+selo "dados reais" / "metadados públicos" / "orientação geral").
 
 Fontes de dados reais usadas, por plataforma:
 
@@ -42,13 +49,13 @@ Fontes de dados reais usadas, por plataforma:
 - **Instagram**: não tem oEmbed público nem API gratuita de conta — a IA
   avalia com base em boas práticas gerais e diz isso claramente.
 
-Sem `ANTHROPIC_API_KEY` configurada, essas páginas caem para um exemplo de
+Sem nenhuma chave de IA configurada, essas páginas caem para um exemplo de
 demonstração gerado localmente (com um aviso visível de que não é uma
 análise real), em vez de quebrar.
 
 Configuração: copie `.env.example` para `.env.local` e preencha
-`ANTHROPIC_API_KEY` (obrigatória) e `YOUTUBE_API_KEY` (opcional, mas
-recomendada para dados reais do YouTube).
+`GEMINI_API_KEY` (gratuita — [aistudio.google.com/apikey](https://aistudio.google.com/apikey))
+e `YOUTUBE_API_KEY` (também gratuita, para dados reais do YouTube).
 
 ## Como funciona a pesquisa diária
 

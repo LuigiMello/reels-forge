@@ -59,7 +59,7 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
         platform: cfg.id,
         url: trimmed,
         dataNote:
-          "IA não configurada neste ambiente (ANTHROPIC_API_KEY ausente) — mostrando uma análise de demonstração gerada localmente, não uma avaliação real.",
+          "IA não configurada neste ambiente (GEMINI_API_KEY/GROQ_API_KEY/ANTHROPIC_API_KEY ausentes) — mostrando uma análise de demonstração gerada localmente, não uma avaliação real.",
         overallScore: mock.overallScore,
         hookScore: mock.hookScore,
         pacingScore: mock.pacingScore,
@@ -68,7 +68,7 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
         soundScore: mock.soundScore,
         ctaScore: mock.ctaScore,
         predictedRetention: mock.predictedRetention,
-        summary: "Análise de demonstração — configure ANTHROPIC_API_KEY para uma avaliação real.",
+        summary: "Análise de demonstração — configure GEMINI_API_KEY (gratuita) para uma avaliação real.",
         diagnosis: mock.diagnosis,
         fixes: mock.fixes,
       });

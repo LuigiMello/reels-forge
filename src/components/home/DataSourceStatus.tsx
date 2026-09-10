@@ -1,10 +1,11 @@
 import { PLATFORM_CONFIG, PLATFORMS } from "@/lib/platform-config";
 import { getConnectorStatus } from "@/lib/connectors/registry";
-import { isAiConfigured } from "@/lib/ai/anthropic";
+import { isAiConfigured, activeProviderLabel } from "@/lib/ai/llm";
 import { Card, Chip, SectionLabel } from "@/components/ui/primitives";
 
 export function DataSourceStatus() {
   const aiOn = isAiConfigured();
+  const providerLabel = activeProviderLabel();
   const ytKeyOn = Boolean(process.env.YOUTUBE_API_KEY);
 
   return (
@@ -35,15 +36,15 @@ export function DataSourceStatus() {
 
       <Card className="mt-4">
         <div className="flex items-center justify-between">
-          <Chip color="var(--acid)">Avaliação por IA (Claude)</Chip>
+          <Chip color="var(--acid)">Avaliação por IA{providerLabel ? ` (${providerLabel})` : ""}</Chip>
           <span className="tape-label" style={{ color: aiOn ? "var(--acid)" : "var(--paper)" }}>
             {aiOn ? "● ativa" : "○ não configurada"}
           </span>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-paper/50">
           {aiOn
-            ? `As páginas de avaliar vídeo/conta usam Claude de verdade, com dados públicos reais quando disponíveis (YouTube Data API ${ytKeyOn ? "conectada" : "não conectada — sem YOUTUBE_API_KEY as métricas do YouTube também ficam limitadas a metadados públicos"}).`
-            : "As páginas de avaliar vídeo/conta caem para um exemplo de demonstração local. Configure ANTHROPIC_API_KEY (e opcionalmente YOUTUBE_API_KEY, para dados reais do YouTube) para ativar análises reais."}
+            ? `As páginas de avaliar vídeo/conta usam IA de verdade (${providerLabel}), com dados públicos reais quando disponíveis (YouTube Data API ${ytKeyOn ? "conectada" : "não conectada — sem YOUTUBE_API_KEY as métricas do YouTube também ficam limitadas a metadados públicos"}).`
+            : "As páginas de avaliar vídeo/conta caem para um exemplo de demonstração local. Configure GEMINI_API_KEY (gratuita) ou GROQ_API_KEY/ANTHROPIC_API_KEY, e opcionalmente YOUTUBE_API_KEY para dados reais do YouTube, para ativar análises reais."}
         </p>
       </Card>
 

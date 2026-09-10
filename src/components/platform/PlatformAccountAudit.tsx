@@ -55,7 +55,7 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
         platform: cfg.id,
         handle: mock.handle,
         dataNote:
-          "IA não configurada neste ambiente (ANTHROPIC_API_KEY ausente) — mostrando uma auditoria de demonstração gerada localmente, não uma avaliação real.",
+          "IA não configurada neste ambiente (GEMINI_API_KEY/GROQ_API_KEY/ANTHROPIC_API_KEY ausentes) — mostrando uma auditoria de demonstração gerada localmente, não uma avaliação real.",
         overallScore: mock.overallScore,
         growthScore: mock.growthScore,
         consistencyScore: mock.consistencyScore,
@@ -63,7 +63,7 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
         formatScore: mock.formatScore,
         bestPostingWindow: mock.bestPostingWindow,
         topFormat: mock.topFormat,
-        summary: "Auditoria de demonstração — configure ANTHROPIC_API_KEY (e YOUTUBE_API_KEY para YouTube) para uma avaliação real.",
+        summary: "Auditoria de demonstração — configure GEMINI_API_KEY (gratuita, e YOUTUBE_API_KEY para YouTube) para uma avaliação real.",
         strengths: mock.strengths,
         risks: mock.risks,
         recommendations: mock.recommendations,

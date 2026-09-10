@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isAiConfigured } from "@/lib/ai/anthropic";
+import { isAiConfigured } from "@/lib/ai/llm";
 import { fetchAccountSignals } from "@/lib/ai/account-signals";
 import { analyzeAccount } from "@/lib/ai/prompts";
 import type { Platform } from "@/lib/types";
@@ -7,7 +7,7 @@ import type { Platform } from "@/lib/types";
 export async function POST(req: Request) {
   if (!isAiConfigured()) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY não configurada no servidor." },
+      { error: "Nenhuma chave de IA configurada no servidor (GEMINI_API_KEY, GROQ_API_KEY ou ANTHROPIC_API_KEY)." },
       { status: 501 }
     );
   }
