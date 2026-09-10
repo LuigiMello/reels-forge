@@ -12,9 +12,10 @@ const GLYPH: Record<ViralPost["platform"], typeof InstagramGlyph> = {
 };
 
 /**
- * Stand-in for a real thumbnail: no scraping is wired up yet (see
- * src/lib/connectors), so this renders a generated gradient "cover" using
- * the post's hook text instead of pretending to show a captured frame.
+ * Shows the real captured thumbnail when the post came from a live API
+ * (post.thumbnailUrl). Otherwise falls back to a generated gradient "cover"
+ * — no scraping wired up for that platform yet, so this doesn't pretend to
+ * show a captured frame.
  */
 export function VideoPreview({ post, className }: { post: ViralPost; className?: string }) {
   const Glyph = GLYPH[post.platform];
@@ -22,16 +23,26 @@ export function VideoPreview({ post, className }: { post: ViralPost; className?:
   return (
     <div
       className={cn("relative aspect-[9/16] w-full overflow-hidden", className)}
-      style={{ background: previewGradientCss(post.thumbHue) }}
+      style={post.thumbnailUrl ? undefined : { background: previewGradientCss(post.thumbHue) }}
     >
-      <div
-        className="absolute inset-0 opacity-40 mix-blend-overlay"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(115deg, rgba(255,255,255,.09) 0px, rgba(255,255,255,.09) 1px, transparent 1px, transparent 10px)",
-        }}
-        aria-hidden="true"
-      />
+      {post.thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- external real thumbnails, not worth Next/Image domain config for a preview tile
+        <img
+          src={post.thumbnailUrl}
+          alt=""
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 opacity-40 mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(115deg, rgba(255,255,255,.09) 0px, rgba(255,255,255,.09) 1px, transparent 1px, transparent 10px)",
+          }}
+          aria-hidden="true"
+        />
+      )}
 
       <div className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center border border-white/25 bg-black/30 text-white backdrop-blur-sm">
         <Glyph size={13} />

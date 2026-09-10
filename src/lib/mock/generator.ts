@@ -16,7 +16,7 @@ import {
 } from "./pools";
 
 function deriveMetrics(raw: RawMetrics): DerivedMetrics {
-  const interactions = raw.likes + raw.comments + raw.shares + raw.saves;
+  const interactions = raw.likes + raw.comments + (raw.shares ?? 0) + (raw.saves ?? 0);
   const engagementRate = raw.views > 0 ? interactions / raw.views : 0;
   const velocityPerHour = raw.views / Math.max(raw.postedHoursAgo, 0.5);
   const retentionRate = Math.min(raw.watchTimeAvgSec / raw.durationSec, 1);

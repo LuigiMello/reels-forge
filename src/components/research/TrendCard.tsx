@@ -42,7 +42,7 @@ export function TrendCard({
   const [copied, setCopied] = useState(false);
   const isFavorite = useFavoritesStore((s) => Boolean(s.items[post.id]));
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
-  const trendUp = post.derived.trendPct >= 0;
+  const trendUp = (post.derived.trendPct ?? 0) >= 0;
 
   async function copyUrl() {
     try {
@@ -61,6 +61,11 @@ export function TrendCard({
           <span className="font-mono text-xs text-paper/40">#{rank.toString().padStart(2, "0")}</span>
           <Chip color={cfg.colorA}>{cfg.name}</Chip>
           <Chip>{post.niche}</Chip>
+          {post.isReal && (
+            <Chip color="var(--acid)" className="hidden sm:inline-flex">
+              dados reais
+            </Chip>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="tape-label text-paper/40">{formatHoursAgo(post.raw.postedHoursAgo)}</span>
@@ -93,17 +98,19 @@ export function TrendCard({
             </div>
             <div className="flex shrink-0 flex-col items-center gap-1">
               <ScoreGauge score={post.derived.viralScore} size={48} />
-              <span
-                className={cn(
-                  "flex items-center gap-0.5 font-mono text-[9px] font-semibold",
-                  trendUp ? "text-emerald-400" : "text-flame"
-                )}
-                title="Variação de views vs. a mesma faixa de horário ontem"
-              >
-                {trendUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                {trendUp ? "+" : ""}
-                {Math.round(post.derived.trendPct)}%
-              </span>
+              {post.derived.trendPct !== undefined && (
+                <span
+                  className={cn(
+                    "flex items-center gap-0.5 font-mono text-[9px] font-semibold",
+                    trendUp ? "text-emerald-400" : "text-flame"
+                  )}
+                  title="Variação de views vs. a mesma faixa de horário ontem"
+                >
+                  {trendUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                  {trendUp ? "+" : ""}
+                  {Math.round(post.derived.trendPct)}%
+                </span>
+              )}
             </div>
           </div>
 
@@ -145,8 +152,12 @@ export function TrendCard({
             <MetricPill label="Views" value={formatCompact(post.raw.views)} />
             <MetricPill icon={METRIC_ICONS.likes} label="Likes" value={formatCompact(post.raw.likes)} />
             <MetricPill icon={METRIC_ICONS.comments} label="Coment." value={formatCompact(post.raw.comments)} />
-            <MetricPill icon={METRIC_ICONS.shares} label="Compart." value={formatCompact(post.raw.shares)} />
-            <MetricPill icon={METRIC_ICONS.saves} label="Salvos" value={formatCompact(post.raw.saves)} />
+            {post.raw.shares !== undefined && (
+              <MetricPill icon={METRIC_ICONS.shares} label="Compart." value={formatCompact(post.raw.shares)} />
+            )}
+            {post.raw.saves !== undefined && (
+              <MetricPill icon={METRIC_ICONS.saves} label="Salvos" value={formatCompact(post.raw.saves)} />
+            )}
             <MetricPill label="Engaj." value={formatPercent(post.derived.engagementRate)} />
           </div>
         ) : (

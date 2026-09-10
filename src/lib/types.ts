@@ -17,19 +17,21 @@ export interface RawMetrics {
   views: number;
   likes: number;
   comments: number;
-  shares: number;
-  saves: number;
+  /** Not publicly exposed by every platform's API (e.g. YouTube) — omit rather than fake a 0. */
+  shares?: number;
+  saves?: number;
   watchTimeAvgSec: number;
   durationSec: number;
   postedHoursAgo: number;
 }
 
 export interface DerivedMetrics {
-  engagementRate: number; // (likes+comments+shares+saves)/views
+  engagementRate: number; // (likes+comments[+shares+saves])/views
   velocityPerHour: number; // views / hours since posted
   retentionRate: number; // watchTimeAvg / duration
   viralScore: number; // composite 0-100
-  trendPct: number; // growth vs. the same slot yesterday, can be negative
+  /** Growth vs. the same slot yesterday — only known for the daily mock feed, not for a single real video lookup. */
+  trendPct?: number;
 }
 
 export interface ViralPost {
@@ -48,7 +50,11 @@ export interface ViralPost {
   derived: DerivedMetrics;
   thumbnailSeed: string;
   url: string;
-  thumbHue: number; // 0-360, drives the preview gradient placeholder
+  thumbHue: number; // 0-360, drives the preview gradient placeholder (fallback when no real thumbnailUrl)
+  /** A real captured thumbnail — when present, the preview shows this image instead of the generated gradient. */
+  thumbnailUrl?: string;
+  /** True for posts pulled from a live API, not the daily mock generator. */
+  isReal?: boolean;
 }
 
 export interface AccountAudit {
