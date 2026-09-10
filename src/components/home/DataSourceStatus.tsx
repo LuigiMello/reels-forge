@@ -44,7 +44,7 @@ export function DataSourceStatus() {
         <p className="mt-3 text-xs leading-relaxed text-paper/50">
           {aiOn
             ? `As páginas de avaliar vídeo/conta usam IA de verdade (${providerLabel}), com dados públicos reais quando disponíveis (YouTube Data API ${ytKeyOn ? "conectada" : "não conectada — sem YOUTUBE_API_KEY as métricas do YouTube também ficam limitadas a metadados públicos"}).`
-            : "As páginas de avaliar vídeo/conta caem para um exemplo de demonstração local. Configure GEMINI_API_KEY (gratuita) ou GROQ_API_KEY/ANTHROPIC_API_KEY, e opcionalmente YOUTUBE_API_KEY para dados reais do YouTube, para ativar análises reais."}
+            : "As páginas de avaliar vídeo/conta caem para um exemplo de demonstração local. Configure GEMINI_API_KEY (gratuita) ou GROQ_API_KEY, e opcionalmente YOUTUBE_API_KEY para dados reais do YouTube, para ativar análises reais."}
         </p>
       </Card>
 

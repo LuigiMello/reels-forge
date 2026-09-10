@@ -73,7 +73,7 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
         platform: cfg.id,
         url: trimmed,
         dataNote:
-          "IA não configurada neste ambiente (GEMINI_API_KEY/GROQ_API_KEY/ANTHROPIC_API_KEY ausentes) — mostrando uma análise de demonstração gerada localmente, não uma avaliação real.",
+          "IA não configurada neste ambiente (GEMINI_API_KEY/GROQ_API_KEY ausentes) — mostrando uma análise de demonstração gerada localmente, não uma avaliação real.",
         overallScore: mock.overallScore,
         hookScore: mock.hookScore,
         pacingScore: mock.pacingScore,

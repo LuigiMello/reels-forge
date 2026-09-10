@@ -1,16 +1,16 @@
 /**
  * Provider-agnostic server-side LLM client — plain fetch, no SDK. Picks
  * whichever provider has a key configured (Gemini first: it's free with no
- * card required, same Google account as the YouTube key). Never import this
- * from a client component: keys must stay on the server.
+ * card required, same Google account as the YouTube key; Groq as a free
+ * fallback). Never import this from a client component: keys must stay on
+ * the server.
  */
 
-type Provider = "gemini" | "groq" | "anthropic";
+type Provider = "gemini" | "groq";
 
 function activeProvider(): Provider | null {
   if (process.env.GEMINI_API_KEY) return "gemini";
   if (process.env.GROQ_API_KEY) return "groq";
-  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
   return null;
 }
 
@@ -22,7 +22,6 @@ export function activeProviderLabel(): string | null {
   const p = activeProvider();
   if (p === "gemini") return "Google Gemini";
   if (p === "groq") return "Groq (Llama)";
-  if (p === "anthropic") return "Anthropic Claude";
   return null;
 }
 
@@ -103,39 +102,11 @@ async function callGroq({ system, user, maxTokens = 1500 }: CallParams): Promise
   return text;
 }
 
-async function callAnthropic({ system, user, maxTokens = 1500 }: CallParams): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY!;
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`Chamada à API da Anthropic falhou (${res.status}): ${errText.slice(0, 300)}`);
-  }
-  const data = await res.json();
-  const text = data?.content?.[0]?.text;
-  if (typeof text !== "string") throw new Error("Resposta inesperada da API da Anthropic.");
-  return text;
-}
-
 export async function callLLM(params: CallParams): Promise<string> {
   const provider = activeProvider();
   if (provider === "gemini") return callGemini(params);
   if (provider === "groq") return callGroq(params);
-  if (provider === "anthropic") return callAnthropic(params);
-  throw new Error("Nenhum provedor de IA configurado (GEMINI_API_KEY, GROQ_API_KEY ou ANTHROPIC_API_KEY).");
+  throw new Error("Nenhum provedor de IA configurado (GEMINI_API_KEY ou GROQ_API_KEY).");
 }
 
 /** Extracts the first JSON object found in a model response (handles stray prose/fences around it). */

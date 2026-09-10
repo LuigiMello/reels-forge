@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  AlertTriangle,
   Check,
   Clapperboard,
   Clock,
@@ -10,9 +11,12 @@ import {
   Download,
   Flame,
   History,
+  Loader2,
   RefreshCw,
   Sparkles,
+  TrendingUp,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import { PLATFORM_CONFIG, PLATFORMS } from "@/lib/platform-config";
 import { NICHES } from "@/lib/mock/pools";
@@ -28,7 +32,7 @@ import {
   type DurationOption,
   type ScriptAngle,
 } from "@/lib/script-builder";
-import type { GeneratedScript, Platform, ScriptTone, ViralPost } from "@/lib/types";
+import type { AiScriptInsight, GeneratedScript, Platform, ScriptTone, ViralPost } from "@/lib/types";
 import { useScriptHistoryStore } from "@/lib/script-history-store";
 import { Button, Card, Chip, ScoreGauge } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -47,6 +51,9 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
   const [script, setScript] = useState<GeneratedScript | null>(null);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("criar");
+  const [insight, setInsight] = useState<AiScriptInsight | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string | null>(null);
 
   const historyItems = useScriptHistoryStore((s) => s.items);
   const saveToHistory = useScriptHistoryStore((s) => s.save);
@@ -70,6 +77,8 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
     });
     setScript(next);
     setCopied(false);
+    setInsight(null);
+    setInsightError(null);
     saveToHistory(next);
   }
 
@@ -124,6 +133,30 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
     saveToHistory(next);
   }
 
+  async function analyzeWithAi() {
+    if (!script || insightLoading) return;
+    setInsightLoading(true);
+    setInsightError(null);
+    try {
+      const res = await fetch("/api/analyze/script", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ script, request: { platform, niche, angle, tone, keyword: keyword || undefined } }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Falha na análise (${res.status})`);
+      }
+      const data: AiScriptInsight = await res.json();
+      setInsight(data);
+    } catch (err) {
+      setInsightError(err instanceof Error ? err.message : "Falha ao analisar tendências.");
+      setInsight(null);
+    } finally {
+      setInsightLoading(false);
+    }
+  }
+
   return (
     <div>
       <div className="mb-8 flex border border-line-strong">
@@ -156,6 +189,8 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
           onClear={clearHistory}
           onLoad={(s) => {
             setScript(s);
+            setInsight(null);
+            setInsightError(null);
             setPlatform(s.platform);
             setNiche(s.niche);
             setTone(s.tone);
@@ -342,7 +377,7 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
                       </div>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-4 border-t border-line pt-4">
+                    <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-line pt-4">
                       <button
                         onClick={downloadScript}
                         className="tape-label flex items-center gap-1.5 text-paper/50 hover:text-acid"
@@ -357,9 +392,94 @@ export function ScriptBuilder({ topOfDay }: { topOfDay: Record<Platform, ViralPo
                         <RefreshCw size={13} />
                         gerar novo
                       </button>
+                      <button
+                        onClick={analyzeWithAi}
+                        disabled={insightLoading}
+                        className="tape-label flex items-center gap-1.5 text-signal hover:opacity-80 disabled:opacity-50"
+                      >
+                        {insightLoading ? <Loader2 size={13} className="animate-spin" /> : <TrendingUp size={13} />}
+                        {insightLoading ? "analisando tendências..." : "analisar tendências + roteiro com IA"}
+                      </button>
                     </div>
                   </Card>
                 </div>
+
+                {insightError && !insight && (
+                  <div className="flex items-start gap-2.5 border border-flame px-3 py-2.5 text-xs text-flame">
+                    <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                    <span>{insightError}</span>
+                  </div>
+                )}
+
+                {insight && (
+                  <Card>
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <p className="tape-label flex items-center gap-1.5 text-signal">
+                        <TrendingUp size={13} />
+                        Análise de tendências + crítica da IA
+                      </p>
+                      <div className="flex shrink-0 flex-col items-center gap-1">
+                        <ScoreGauge score={insight.score} size={44} />
+                        <span className="tape-label text-paper/40">potencial agora</span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={cn(
+                        "mb-4 flex items-start gap-2.5 border px-3 py-2.5 text-xs",
+                        insight.hasRealTrendData ? "border-acid text-acid" : "border-flame text-flame"
+                      )}
+                    >
+                      {insight.hasRealTrendData ? <Wand2 size={13} className="mt-0.5 shrink-0" /> : <AlertTriangle size={13} className="mt-0.5 shrink-0" />}
+                      <span className="text-paper/60">{insight.dataNote}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <p className="tape-label mb-1.5 text-paper/50">O que está em alta agora</p>
+                        <p className="text-sm leading-relaxed text-paper/70">{insight.trendsSummary}</p>
+                      </div>
+
+                      {insight.trendingExamples.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {insight.trendingExamples.slice(0, 6).map((ex) => (
+                            <span
+                              key={ex.title + ex.channel}
+                              className="border border-line px-2 py-1 text-xs text-paper/60"
+                              title={`${ex.channel} · ${formatCompact(ex.views)} views`}
+                            >
+                              {ex.category === "música" ? "🎵 " : "🔥 "}
+                              {ex.title.length > 40 ? ex.title.slice(0, 40) + "…" : ex.title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="tape-label mb-1.5 text-paper/50">Estilo recomendado agora</p>
+                        <p className="text-sm leading-relaxed text-paper/70">{insight.recommendedStyle}</p>
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="border-t border-line pt-4">
+                          <p className="tape-label mb-1.5 text-paper/50">Crítica da sua ideia</p>
+                          <p className="text-sm leading-relaxed text-paper/70">{insight.ideaCritique}</p>
+                        </div>
+                        <div className="border-t border-line pt-4">
+                          <p className="tape-label mb-1.5 text-paper/50">Crítica deste roteiro</p>
+                          <p className="text-sm leading-relaxed text-paper/70">{insight.scriptCritique}</p>
+                        </div>
+                      </div>
+
+                      {insight.hookRewrite && (
+                        <div className="border-t border-line pt-4">
+                          <p className="tape-label mb-1.5 text-paper/50">Sugestão de hook mais alinhada</p>
+                          <p className="border-l-2 border-acid pl-3 text-sm text-paper">“{insight.hookRewrite}”</p>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
 
                 {script.inspiration && (
                   <div className="flex items-center gap-2 border border-line-strong bg-ink px-3 py-2.5 text-xs text-paper/60">

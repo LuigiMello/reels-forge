@@ -1,6 +1,7 @@
-import type { AiAccountAudit, AiContentAudit } from "../types";
+import type { AiAccountAudit, AiContentAudit, AiScriptInsight, GeneratedScript, Platform } from "../types";
 import type { AccountSignals } from "./account-signals";
 import type { ContentSignals } from "./content-signals";
+import type { TrendSignals } from "./trend-signals";
 import { callLLM, extractJson } from "./llm";
 
 const HONESTY_RULE = `Regra inegociável: você NÃO assistiu ao vídeo nem tem acesso à conta em tempo real — só ao que estiver listado em "dados disponíveis" abaixo. Nunca finja ter visto o vídeo, ouvido o áudio ou lido a legenda/hashtags/comentários reais se eles não estiverem nos dados. Se um dado não existir, diga isso explicitamente no campo "dataNote"/notas e baseie a nota nesse critério em boas práticas gerais da plataforma, não em detalhes inventados. Seja um avaliador cético, minucioso e direto, no estilo de uma ferramenta como o vidIQ: analise TUDO que os dados permitirem (gancho, legenda/descrição, hashtags, CTA, ritmo, som, estilo visual, comentários reais quando houver) e explique o "porquê" de cada nota, não só o número. Elogie só o que for justificado pelos dados reais, e seja honesto quando a avaliação for genérica por falta de dados.`;
@@ -183,5 +184,73 @@ O campo "mode" deve ser "${mode}".`;
     realStats: signals.realStats,
     recentUploads: signals.recentUploads,
     uploadsPerWeek: signals.uploadsPerWeek,
+  };
+}
+
+const SCRIPT_INSIGHT_SCHEMA = `{
+  "trendsSummary": "2-3 frases sobre o que está bombando agora relevante pro nicho/plataforma escolhidos, citando exemplos reais de trendingExamples quando existirem",
+  "recommendedStyle": "1-2 frases recomendando um estilo/formato de vídeo bom pra gravar AGORA, considerando as tendências e a plataforma",
+  "ideaCritique": "2-4 frases avaliando com honestidade a ideia do usuário (nicho + ângulo + tom escolhidos) — o que está bom, o que é arriscado, se está alinhada com o que está em alta",
+  "scriptCritique": "2-4 frases avaliando o roteiro específico que foi gerado (hook, estrutura, CTA, duração) — critique de verdade, não só elogie",
+  "hookRewrite": "opcional: uma versão alternativa do hook mais alinhada com as tendências atuais, ou null se o hook já estiver bom",
+  "score": number (0-100, quão bem essa ideia+roteiro está posicionada pra viralizar AGORA, considerando as tendências)
+}`;
+
+export async function analyzeScript(
+  script: GeneratedScript,
+  request: { platform: Platform; niche: string; angle: string; tone: string; keyword?: string },
+  trends: TrendSignals
+): Promise<AiScriptInsight> {
+  const hasRealTrendData = trends.items.length > 0;
+
+  const user = `Você vai fazer 3 coisas para um criador de conteúdo, de forma honesta e direta, no estilo vidIQ: (1) resumir o que está em alta agora relevante pro nicho dele, (2) criticar a ideia que ele propôs, (3) criticar o roteiro específico que foi gerado pra essa ideia.
+
+Plataforma: ${request.platform}
+Nicho escolhido: ${request.niche}
+Ângulo escolhido: ${request.angle}
+Tom escolhido: ${request.tone}
+Palavra-chave: ${request.keyword ?? "(nenhuma)"}
+
+Trending real disponível (${trends.sourceNote}):
+${JSON.stringify(trends.items, null, 2)}
+
+Roteiro gerado (para você criticar):
+${JSON.stringify(
+  {
+    title: script.title,
+    hookOptions: script.hookOptions,
+    blocks: script.blocks.map((b) => ({ label: b.label, timeframe: b.timeframe, onScreenText: b.onScreenText })),
+    caption: script.caption,
+    hashtags: script.hashtags,
+    cta: script.cta,
+    estimatedDurationSec: script.estimatedDurationSec,
+  },
+  null,
+  2
+)}
+
+Regras:
+- Os itens em "trending real disponível" são do chart de trending do YouTube Brasil (geral + música) — é o único trending público e real que existe entre as 3 plataformas. Use isso como termômetro real do que está bombando, mas deixe claro que é um proxy do YouTube, não um trending nativo do TikTok/Instagram, se a plataforma escolhida for outra.
+- Se a lista de trending estiver vazia, diga isso claramente em vez de inventar nomes de músicas, sons ou memes que você não tem certeza que estão em alta agora — prefira falar de formatos/estruturas de vídeo que costumam funcionar bem (storytime, antes/depois, etc.) em vez de citar uma trend específica não verificada.
+- Seja um crítico de verdade: se a ideia ou o roteiro tiver um problema real (ângulo saturado, hook fraco, duração desalinhada com o formato), diga isso sem suavizar.
+- "hookRewrite": só preencha se você tiver uma sugestão concreta melhor que os hooks já existentes; senão, null.
+
+Responda em português do Brasil, APENAS com um JSON válido (sem markdown, sem texto fora do JSON) no formato exato:
+${SCRIPT_INSIGHT_SCHEMA}`;
+
+  const raw = await callLLM({
+    system:
+      "Você é um estrategista de conteúdo viral (Reels/TikTok/Shorts) atualizado e direto, no estilo vidIQ. Você é honesto sobre o que é dado real vs. conhecimento geral, nunca inventa uma trend específica sem ter certeza. Você responde sempre em JSON puro.",
+    user,
+    maxTokens: 1800,
+  });
+
+  const parsed = extractJson<Omit<AiScriptInsight, "hasRealTrendData" | "dataNote" | "trendingExamples">>(raw);
+
+  return {
+    ...parsed,
+    hasRealTrendData,
+    dataNote: trends.sourceNote,
+    trendingExamples: trends.items,
   };
 }

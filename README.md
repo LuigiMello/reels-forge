@@ -25,13 +25,11 @@ Abra [http://localhost:3000](http://localhost:3000).
 ## Avaliação de vídeo/conta com IA real
 
 As páginas "Avaliar Reel/Vídeo/Short" e "Avaliar conta/canal" usam IA de
-verdade — não são mock. Suporta três provedores (usa o primeiro que
-encontrar configurado, nesta ordem):
+verdade — não são mock. Suporta dois provedores, os dois gratuitos e sem
+cartão de crédito (usa o primeiro que encontrar configurado):
 
-1. **Google Gemini** (`GEMINI_API_KEY`) — gratuito, sem cartão de crédito.
-2. **Groq** (`GROQ_API_KEY`) — gratuito, sem cartão de crédito, modelos Llama.
-3. **Anthropic Claude** (`ANTHROPIC_API_KEY`) — pago (créditos grátis iniciais
-   em contas novas).
+1. **Google Gemini** (`GEMINI_API_KEY`).
+2. **Groq** (`GROQ_API_KEY`) — modelos Llama, respostas bem rápidas.
 
 A IA nunca finge ter assistido ao vídeo: ela só analisa o que consegue buscar
 publicamente, e é transparente sobre isso na própria resposta (`dataNote` +

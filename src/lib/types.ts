@@ -193,3 +193,23 @@ export interface GeneratedScript {
   coverSeed: number;
   inspiration?: ScriptInspiration;
 }
+
+export interface TrendExample {
+  title: string;
+  channel: string;
+  views: number;
+  category: "geral" | "música";
+}
+
+/** AI critique of the current trend landscape + the user's idea + the generated script. */
+export interface AiScriptInsight {
+  hasRealTrendData: boolean;
+  dataNote: string;
+  trendsSummary: string;
+  trendingExamples: TrendExample[];
+  recommendedStyle: string;
+  ideaCritique: string;
+  scriptCritique: string;
+  hookRewrite?: string;
+  score: number;
+}

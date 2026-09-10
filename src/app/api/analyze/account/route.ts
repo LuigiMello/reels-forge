@@ -7,7 +7,7 @@ import type { Platform } from "@/lib/types";
 export async function POST(req: Request) {
   if (!isAiConfigured()) {
     return NextResponse.json(
-      { error: "Nenhuma chave de IA configurada no servidor (GEMINI_API_KEY, GROQ_API_KEY ou ANTHROPIC_API_KEY)." },
+      { error: "Nenhuma chave de IA configurada no servidor (GEMINI_API_KEY ou GROQ_API_KEY)." },
       { status: 501 }
     );
   }
