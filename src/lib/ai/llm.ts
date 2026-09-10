@@ -77,13 +77,15 @@ async function callGemini({ system, user, maxTokens = 1500 }: CallParams): Promi
 
 async function callGroq({ system, user, maxTokens = 1500 }: CallParams): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY!;
-  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
-      max_tokens: maxTokens,
+      // gpt-oss on Groq also spends part of this budget on hidden
+      // reasoning tokens before the visible JSON — same headroom fix as Gemini.
+      max_tokens: Math.max(maxTokens, 2500),
       temperature: 0.6,
       response_format: { type: "json_object" },
       messages: [
@@ -97,8 +99,14 @@ async function callGroq({ system, user, maxTokens = 1500 }: CallParams): Promise
     throw new Error(`Chamada à API do Groq falhou (${res.status}): ${errText.slice(0, 300)}`);
   }
   const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (typeof text !== "string") throw new Error("Resposta inesperada da API do Groq.");
+  const choice = data?.choices?.[0];
+  const text = choice?.message?.content;
+  if (!text) {
+    if (choice?.finish_reason === "length") {
+      throw new Error("Groq estourou o limite de tokens antes de terminar a resposta (aumente maxOutputTokens).");
+    }
+    throw new Error("Resposta vazia do Groq.");
+  }
   return text;
 }
 
