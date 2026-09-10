@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 import { useFavoritesStore } from "@/lib/favorites-store";
+import { useScriptHistoryStore } from "@/lib/script-history-store";
 
-/** Rehydrates the favorites store from localStorage once, client-side only (avoids SSR touching localStorage). */
+/** Rehydrates persisted client stores from localStorage once (avoids SSR touching localStorage). */
 export function FavoritesHydrator() {
   useEffect(() => {
     useFavoritesStore.persist.rehydrate();
+    useScriptHistoryStore.persist.rehydrate();
   }, []);
   return null;
 }

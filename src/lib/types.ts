@@ -91,6 +91,15 @@ export interface ScriptBlock {
   instruction: string;
   onScreenText?: string;
   vo?: string;
+  shot?: string;
+}
+
+export type ScriptTone = "humor" | "serio" | "inspirador" | "sarcastico";
+
+export interface ScriptInspiration {
+  hook: string;
+  handle: string;
+  score: number;
 }
 
 export interface GeneratedScript {
@@ -98,13 +107,17 @@ export interface GeneratedScript {
   platform: Platform;
   niche: string;
   angle: string;
+  tone: ScriptTone;
   title: string;
   hookOptions: string[];
   blocks: ScriptBlock[];
   caption: string;
   hashtags: string[];
-  soundSuggestion: string;
+  soundOptions: string[];
   cta: string;
   estimatedDurationSec: number;
   productionNotes: string[];
+  predictedScore: number;
+  coverSeed: number;
+  inspiration?: ScriptInspiration;
 }

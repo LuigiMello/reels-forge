@@ -2,6 +2,7 @@ import { Play } from "lucide-react";
 import type { ViralPost } from "@/lib/types";
 import { InstagramGlyph, TikTokGlyph, YouTubeGlyph } from "@/components/icons/PlatformGlyphs";
 import { formatCompact, formatDuration } from "@/lib/format";
+import { previewGradientCss } from "@/lib/preview-gradient";
 import { cn } from "@/lib/utils";
 
 const GLYPH: Record<ViralPost["platform"], typeof InstagramGlyph> = {
@@ -15,26 +16,13 @@ const GLYPH: Record<ViralPost["platform"], typeof InstagramGlyph> = {
  * src/lib/connectors), so this renders a generated gradient "cover" using
  * the post's hook text instead of pretending to show a captured frame.
  */
-// Curated vivid pairs, all in the indigo → violet → magenta → pink family —
-// warm pairs (coral/orange) are avoided because the dark scrim behind the
-// caption text (below) turns them muddy brown once layered on top.
-const PREVIEW_PALETTES: [string, string][] = [
-  ["#2b2570", "#7b2ff7"],
-  ["#4f0f7a", "#c2266b"],
-  ["#6a11cb", "#c21e74"],
-  ["#c21e74", "#e94794"],
-  ["#833ab4", "#e1306c"],
-  ["#1c3fae", "#7b2ff7"],
-];
-
 export function VideoPreview({ post, className }: { post: ViralPost; className?: string }) {
   const Glyph = GLYPH[post.platform];
-  const [from, to] = PREVIEW_PALETTES[post.thumbHue % PREVIEW_PALETTES.length];
 
   return (
     <div
       className={cn("relative aspect-[9/16] w-full overflow-hidden", className)}
-      style={{ background: `linear-gradient(155deg, ${from} 0%, ${to} 100%)` }}
+      style={{ background: previewGradientCss(post.thumbHue) }}
     >
       <div
         className="absolute inset-0 opacity-40 mix-blend-overlay"

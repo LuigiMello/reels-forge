@@ -93,6 +93,47 @@ export const CTA_POOL = [
   "Deixa o like que a próxima parte eu solto amanhã",
 ] as const;
 
+export const SHOT_TYPES = [
+  "Plano fechado (close-up no rosto)",
+  "Plano médio (cintura pra cima)",
+  "Plano geral / wide",
+  "POV — primeira pessoa",
+  "Plano detalhe (mãos/objeto)",
+  "Selfie frontal, braço esticado",
+  "Plano de cima (top shot)",
+  "Over-the-shoulder",
+] as const;
+
+export const TONE_CTA_POOL = {
+  humor: [
+    "Comenta 😂 se você também já fez isso",
+    "Marca aquele amigo que faz isso até hoje",
+    "Segue se você também é assim",
+  ],
+  serio: [
+    "Salva esse vídeo pra consultar depois",
+    "Comenta sua dúvida que eu respondo",
+    "Compartilha com quem precisa saber disso",
+  ],
+  inspirador: [
+    "Comenta 'EU CONSIGO' se esse vídeo te tocou",
+    "Salva pra reler quando duvidar de você mesmo",
+    "Compartilha com quem também está tentando",
+  ],
+  sarcastico: [
+    "Comenta se você também 'está bem' 🙃",
+    "Marca quem definitivamente não vai mudar",
+    "Segue, porque aparentemente precisa mesmo",
+  ],
+} as const;
+
+export const TONE_HOOK_PREFIX = {
+  humor: ["Plot twist: ", "Ninguém pediu, mas: ", ""],
+  serio: ["", "Dado real: ", ""],
+  inspirador: ["Se você só ler uma coisa hoje, seja isso: ", "", ""],
+  sarcastico: ["Ah, claro, porque ", "Que surpresa: ", ""],
+} as const;
+
 export const PRODUCTION_NOTES_POOL = [
   "Grave o hook em close-up, sem cortes — a primeira impressão decide o scroll.",
   "Use legenda dinâmica (palavra por palavra) para segurar quem assiste sem som.",
@@ -103,3 +144,10 @@ export const PRODUCTION_NOTES_POOL = [
   "Feche o vídeo com um loop visual que conecta com o primeiro frame.",
   "Use uma pausa de 1s antes da virada — cria expectativa antes do payoff.",
 ] as const;
+
+export const TONE_PRODUCTION_NOTE = {
+  humor: "Tom humorístico: exagere a expressão facial no hook e deixe 0.5s de pausa antes da virada — é onde vem o riso.",
+  serio: "Tom sério/direto: fale em ritmo firme, sem gírias, e mantenha o rosto neutro — passa mais autoridade.",
+  inspirador: "Tom inspirador: use trilha com crescendo emocional e feche com o olhar direto na câmera.",
+  sarcastico: "Tom sarcástico: marque a ironia com uma pausa + meio sorriso — sem isso o texto soa só rude.",
+} as const;
