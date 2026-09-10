@@ -1,29 +1,81 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
-import type { PlatformConfig } from "@/lib/types";
+import { AlertTriangle, CheckCircle2, Info, Loader2, Search, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
+import type { AiAccountAudit, PlatformConfig } from "@/lib/types";
 import { generateAccountAudit } from "@/lib/mock/generator";
-import type { AccountAudit } from "@/lib/types";
 import { Button, Card, ScoreGauge, SectionLabel, StatNumber } from "@/components/ui/primitives";
 import { formatCompact } from "@/lib/format";
 
-const SUB_SCORES: { key: keyof AccountAudit; label: string }[] = [
+const SUB_SCORES: { key: keyof AiAccountAudit; label: string }[] = [
   { key: "growthScore", label: "Crescimento" },
   { key: "consistencyScore", label: "Consistência" },
   { key: "hookScore", label: "Ganchos" },
   { key: "formatScore", label: "Variedade de formato" },
 ];
 
+const MODE_META: Record<AiAccountAudit["mode"], { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  "real-data": { label: "análise com dados reais da conta", color: "var(--acid)", icon: CheckCircle2 },
+  "guidance-only": { label: "orientação geral (conta não encontrada / API não disponível)", color: "var(--flame)", icon: AlertTriangle },
+};
+
 export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
   const [handle, setHandle] = useState("");
-  const [audit, setAudit] = useState<AccountAudit | null>(null);
+  const [audit, setAudit] = useState<AiAccountAudit | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isMock, setIsMock] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!handle.trim()) return;
-    setAudit(generateAccountAudit(cfg.id, handle.trim()));
+    const trimmed = handle.trim();
+    if (!trimmed || loading) return;
+
+    setLoading(true);
+    setAiError(null);
+
+    try {
+      const res = await fetch("/api/analyze/account", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ platform: cfg.id, handle: trimmed }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Falha na análise (${res.status})`);
+      }
+      const data: AiAccountAudit = await res.json();
+      setAudit(data);
+      setIsMock(false);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Falha ao analisar.");
+      const mock = generateAccountAudit(cfg.id, trimmed);
+      setAudit({
+        mode: "guidance-only",
+        platform: cfg.id,
+        handle: mock.handle,
+        dataNote:
+          "IA não configurada neste ambiente (ANTHROPIC_API_KEY ausente) — mostrando uma auditoria de demonstração gerada localmente, não uma avaliação real.",
+        overallScore: mock.overallScore,
+        growthScore: mock.growthScore,
+        consistencyScore: mock.consistencyScore,
+        hookScore: mock.hookScore,
+        formatScore: mock.formatScore,
+        bestPostingWindow: mock.bestPostingWindow,
+        topFormat: mock.topFormat,
+        summary: "Auditoria de demonstração — configure ANTHROPIC_API_KEY (e YOUTUBE_API_KEY para YouTube) para uma avaliação real.",
+        strengths: mock.strengths,
+        risks: mock.risks,
+        recommendations: mock.recommendations,
+      });
+      setIsMock(true);
+    } finally {
+      setLoading(false);
+    }
   }
+
+  const modeMeta = audit ? MODE_META[audit.mode] : null;
+  const ModeIcon = modeMeta?.icon ?? Info;
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12">
@@ -40,36 +92,58 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
           type="text"
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
-          placeholder={`@seu.usuario`}
+          placeholder="@seu.usuario"
           className="min-h-11 flex-1 border border-line-strong bg-ink-2 px-4 py-3 text-sm text-paper placeholder:text-paper/30 focus:border-acid focus:outline-none"
         />
-        <Button type="submit" className="shrink-0">
-          <Search size={14} />
-          Auditar {cfg.accountLabel.toLowerCase()}
+        <Button type="submit" disabled={loading} className="shrink-0">
+          {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+          {loading ? "Auditando..." : `Auditar ${cfg.accountLabel.toLowerCase()}`}
         </Button>
       </form>
       <p className="mt-3 text-xs text-paper/40">
-        Modo demonstração — para ler dados privados reais da sua conta, será necessário login
-        oficial (OAuth) da plataforma, ainda não conectado.
+        {cfg.id === "youtube"
+          ? "Busca o canal real via YouTube Data API (inscritos, views, uploads recentes) e usa isso na análise."
+          : "Instagram e TikTok não têm API pública gratuita de conta — a IA avalia com base em boas práticas gerais e é honesta sobre essa limitação."}
       </p>
 
       {audit && (
         <div className="mt-10 flex flex-col gap-6">
+          {modeMeta && (
+            <div
+              className="flex items-start gap-2.5 border px-3 py-2.5 text-xs"
+              style={{ borderColor: modeMeta.color, color: modeMeta.color }}
+            >
+              <ModeIcon size={14} className="mt-0.5 shrink-0" />
+              <div>
+                <span className="tape-label block text-[10px]">{modeMeta.label}</span>
+                <span className="mt-1 block text-paper/60">{audit.dataNote}</span>
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
             <Card className="flex flex-col items-center gap-3 text-center">
               <ScoreGauge score={audit.overallScore} size={110} />
               <p className="tape-label text-paper/50">Score geral da conta</p>
-              <p className="font-display text-lg font-bold text-paper">{audit.handle}</p>
+              <p className="font-display text-lg font-bold text-paper">{audit.channelTitle ?? audit.handle}</p>
             </Card>
 
             <Card>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-                <StatNumber label="Seguidores" value={formatCompact(audit.followers)} />
-                <StatNumber label="Views médias" value={formatCompact(audit.avgViews)} />
-                <StatNumber label="Posts/semana" value={String(audit.postsPerWeek)} />
-                <StatNumber label="Melhor horário" value={audit.bestPostingWindow} />
-                <StatNumber label="Formato-chave" value={audit.topFormat} />
-              </div>
+              {audit.realStats ? (
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+                  <StatNumber label="Inscritos" value={audit.realStats.subscribers ? formatCompact(audit.realStats.subscribers) : "—"} />
+                  <StatNumber label="Views totais" value={audit.realStats.totalViews ? formatCompact(audit.realStats.totalViews) : "—"} />
+                  <StatNumber label="Vídeos" value={audit.realStats.videoCount ? formatCompact(audit.realStats.videoCount) : "—"} />
+                  <StatNumber label="Melhor horário" value={audit.bestPostingWindow} />
+                  <StatNumber label="Formato-chave" value={audit.topFormat} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+                  <StatNumber label="Melhor horário" value={audit.bestPostingWindow} />
+                  <StatNumber label="Formato-chave" value={audit.topFormat} />
+                </div>
+              )}
+              {audit.summary && <p className="mt-4 border-t border-line pt-4 text-xs leading-relaxed text-paper/50">{audit.summary}</p>}
             </Card>
           </div>
 
@@ -93,6 +167,22 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
               })}
             </div>
           </Card>
+
+          {audit.recentUploads && audit.recentUploads.length > 0 && (
+            <Card>
+              <p className="tape-label mb-3 text-paper/50">Uploads recentes usados na análise</p>
+              <ul className="flex flex-col gap-2 text-sm text-paper/70">
+                {audit.recentUploads.map((u) => (
+                  <li key={u.title + u.publishedAt} className="flex justify-between gap-3 border-t border-line pt-2 first:border-t-0 first:pt-0">
+                    <span className="truncate">{u.title}</span>
+                    <span className="tape-label shrink-0 text-paper/30">
+                      {new Date(u.publishedAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <div className="grid gap-6 sm:grid-cols-3">
             <Card>
@@ -138,6 +228,8 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
               </ul>
             </Card>
           </div>
+
+          {isMock && aiError && <p className="text-xs text-paper/30">Detalhe técnico: {aiError}</p>}
         </div>
       )}
     </section>

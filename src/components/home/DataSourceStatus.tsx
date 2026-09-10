@@ -1,8 +1,12 @@
 import { PLATFORM_CONFIG, PLATFORMS } from "@/lib/platform-config";
 import { getConnectorStatus } from "@/lib/connectors/registry";
+import { isAiConfigured } from "@/lib/ai/anthropic";
 import { Card, Chip, SectionLabel } from "@/components/ui/primitives";
 
 export function DataSourceStatus() {
+  const aiOn = isAiConfigured();
+  const ytKeyOn = Boolean(process.env.YOUTUBE_API_KEY);
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-20">
       <SectionLabel index="03">Status da fonte de dados</SectionLabel>
@@ -28,10 +32,25 @@ export function DataSourceStatus() {
           })}
         </div>
       </Card>
+
+      <Card className="mt-4">
+        <div className="flex items-center justify-between">
+          <Chip color="var(--acid)">Avaliação por IA (Claude)</Chip>
+          <span className="tape-label" style={{ color: aiOn ? "var(--acid)" : "var(--paper)" }}>
+            {aiOn ? "● ativa" : "○ não configurada"}
+          </span>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-paper/50">
+          {aiOn
+            ? `As páginas de avaliar vídeo/conta usam Claude de verdade, com dados públicos reais quando disponíveis (YouTube Data API ${ytKeyOn ? "conectada" : "não conectada — sem YOUTUBE_API_KEY as métricas do YouTube também ficam limitadas a metadados públicos"}).`
+            : "As páginas de avaliar vídeo/conta caem para um exemplo de demonstração local. Configure ANTHROPIC_API_KEY (e opcionalmente YOUTUBE_API_KEY, para dados reais do YouTube) para ativar análises reais."}
+        </p>
+      </Card>
+
       <p className="mt-4 text-xs text-paper/40">
-        Todos os dados exibidos hoje são gerados automaticamente por um simulador estatístico
-        diário (mesma seed = mesmo resultado o dia todo). Basta conectar as chaves de API reais
-        e ligar o modo <code className="font-mono">live</code> em{" "}
+        Todos os dados da pesquisa diária são gerados automaticamente por um simulador
+        estatístico (mesma seed = mesmo resultado o dia todo). Basta conectar as chaves de API
+        reais e ligar o modo <code className="font-mono">live</code> em{" "}
         <code className="font-mono">src/lib/connectors/registry.ts</code> quando você conectar
         suas contas.
       </p>

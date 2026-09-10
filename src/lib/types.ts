@@ -85,6 +85,50 @@ export interface ContentAudit {
   fixes: string[];
 }
 
+/** Real, AI-written analysis — grounded in whatever public data could actually be fetched. */
+export interface AiContentAudit {
+  mode: "real-data" | "metadata-only" | "guidance-only";
+  platform: Platform;
+  url: string;
+  title?: string;
+  authorName?: string;
+  thumbnailUrl?: string;
+  realStats?: { views?: number; likes?: number; comments?: number; durationSec?: number };
+  dataNote: string;
+  overallScore: number;
+  hookScore: number;
+  pacingScore: number;
+  captionScore: number;
+  hashtagScore: number;
+  soundScore: number;
+  ctaScore: number;
+  predictedRetention: number;
+  summary: string;
+  diagnosis: string[];
+  fixes: string[];
+}
+
+export interface AiAccountAudit {
+  mode: "real-data" | "guidance-only";
+  platform: Platform;
+  handle: string;
+  channelTitle?: string;
+  realStats?: { subscribers?: number; totalViews?: number; videoCount?: number };
+  recentUploads?: { title: string; publishedAt: string }[];
+  dataNote: string;
+  overallScore: number;
+  growthScore: number;
+  consistencyScore: number;
+  hookScore: number;
+  formatScore: number;
+  bestPostingWindow: string;
+  topFormat: string;
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  recommendations: string[];
+}
+
 export interface ScriptBlock {
   label: string;
   timeframe: string;
