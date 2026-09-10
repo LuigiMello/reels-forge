@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Clapperboard, Copy, RefreshCw } from "lucide-react";
+import { Check, Clapperboard, Copy, Download, RefreshCw } from "lucide-react";
 import { PLATFORM_CONFIG, PLATFORMS } from "@/lib/platform-config";
 import { NICHES } from "@/lib/mock/pools";
-import { SCRIPT_ANGLES, buildScript, type ScriptAngle } from "@/lib/script-builder";
+import { SCRIPT_ANGLES, buildScript, formatScriptAsText, type ScriptAngle } from "@/lib/script-builder";
 import type { GeneratedScript, Platform } from "@/lib/types";
 import { Button, Card, Chip } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,19 @@ export function ScriptBuilder() {
     } catch {
       // clipboard unavailable — silently ignore, the text is on screen either way
     }
+  }
+
+  function downloadScript() {
+    if (!script) return;
+    const blob = new Blob([formatScriptAsText(script)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `roteiro-${script.platform}-${script.angle.toLowerCase().replace(/\s+/g, "-")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -138,13 +151,22 @@ export function ScriptBuilder() {
                   </Chip>
                   <h2 className="mt-3 font-display text-2xl font-bold text-paper">{script.title}</h2>
                 </div>
-                <button
-                  onClick={generate}
-                  className="tape-label flex items-center gap-1.5 text-paper/50 hover:text-acid"
-                >
-                  <RefreshCw size={13} />
-                  regenerar
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={downloadScript}
+                    className="tape-label flex items-center gap-1.5 text-paper/50 hover:text-acid"
+                  >
+                    <Download size={13} />
+                    baixar .txt
+                  </button>
+                  <button
+                    onClick={generate}
+                    className="tape-label flex items-center gap-1.5 text-paper/50 hover:text-acid"
+                  >
+                    <RefreshCw size={13} />
+                    regenerar
+                  </button>
+                </div>
               </div>
 
               <div className="mt-5">

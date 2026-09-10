@@ -256,3 +256,32 @@ export function buildScript(req: ScriptRequest): GeneratedScript {
     productionNotes: rng.pickMany(PRODUCTION_NOTES_POOL, 4),
   };
 }
+
+/** Plain-text export of a generated script — for the "baixar .txt" button. */
+export function formatScriptAsText(script: GeneratedScript): string {
+  const lines: string[] = [];
+  lines.push(script.title.toUpperCase());
+  lines.push(`Plataforma: ${script.platform} · Nicho: ${script.niche} · ${script.estimatedDurationSec}s`);
+  lines.push("");
+  lines.push("OPÇÕES DE HOOK");
+  script.hookOptions.forEach((h, i) => lines.push(`${i + 1}. ${h}`));
+  lines.push("");
+  lines.push("ROTEIRO");
+  script.blocks.forEach((b) => {
+    lines.push(`[${b.timeframe}] ${b.label}`);
+    lines.push(`  ${b.instruction}`);
+    if (b.onScreenText) lines.push(`  texto em tela: "${b.onScreenText}"`);
+    lines.push("");
+  });
+  lines.push("LEGENDA");
+  lines.push(script.caption);
+  lines.push("");
+  lines.push(`TRILHA SUGERIDA: ${script.soundSuggestion}`);
+  lines.push(`CTA: ${script.cta}`);
+  lines.push("");
+  lines.push("NOTAS DE PRODUÇÃO");
+  script.productionNotes.forEach((n) => lines.push(`- ${n}`));
+  lines.push("");
+  lines.push("gerado em reels-forge");
+  return lines.join("\n");
+}

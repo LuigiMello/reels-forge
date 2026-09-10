@@ -5,6 +5,8 @@ import { SideDock } from "@/components/layout/SideDock";
 import { TopTicker } from "@/components/layout/TopTicker";
 import { GrainOverlay } from "@/components/layout/GrainOverlay";
 import { GradientDefs } from "@/components/layout/GradientDefs";
+import { FavoritesHydrator } from "@/components/layout/FavoritesHydrator";
+import { BackToTop } from "@/components/layout/BackToTop";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -39,11 +41,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-full bg-ink text-paper font-sans">
         <GradientDefs />
         <GrainOverlay />
+        <FavoritesHydrator />
         <TopTicker />
         <div className="flex">
           <SideDock />
           <main className="min-h-screen w-full pl-0 md:pl-[76px]">{children}</main>
         </div>
+        <BackToTop />
       </body>
     </html>
   );

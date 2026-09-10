@@ -29,6 +29,7 @@ export interface DerivedMetrics {
   velocityPerHour: number; // views / hours since posted
   retentionRate: number; // watchTimeAvg / duration
   viralScore: number; // composite 0-100
+  trendPct: number; // growth vs. the same slot yesterday, can be negative
 }
 
 export interface ViralPost {

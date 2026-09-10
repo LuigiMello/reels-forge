@@ -28,7 +28,7 @@ function deriveMetrics(raw: RawMetrics): DerivedMetrics {
   const velocityScore = Math.min(velocityPerHour / 250000, 1) * 25;
   const viralScore = Math.round(engagementScore + retentionScore + velocityScore);
 
-  return { engagementRate, velocityPerHour, retentionRate, viralScore };
+  return { engagementRate, velocityPerHour, retentionRate, viralScore, trendPct: 0 };
 }
 
 function buildRawMetrics(rng: Rng, platform: Platform): RawMetrics {
@@ -94,6 +94,7 @@ function buildOnePost(rng: Rng, platform: Platform, index: number, dateKey: stri
   const followers = Math.round(rng.float(8_000, 4_500_000));
   const raw = buildRawMetrics(rng, platform);
   const derived = deriveMetrics(raw);
+  derived.trendPct = rng.float(-32, 95);
 
   const hashtagBase = niche
     .toLowerCase()

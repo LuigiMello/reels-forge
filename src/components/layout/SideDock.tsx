@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Feather, Home } from "lucide-react";
+import { Compass, Feather, Heart, Home } from "lucide-react";
 import { InstagramGlyph, TikTokGlyph, YouTubeGlyph } from "@/components/icons/PlatformGlyphs";
 import { cn } from "@/lib/utils";
+import { useFavoritesStore } from "@/lib/favorites-store";
 
 const NAV = [
   { href: "/", label: "Início", icon: Home, accent: "var(--acid)" },
   { href: "/pesquisa", label: "Pesquisa", icon: Compass, accent: "var(--signal)" },
   { href: "/roteiro", label: "Roteiro", icon: Feather, accent: "var(--flame)" },
+  { href: "/favoritos", label: "Favoritos", icon: Heart, accent: "var(--acid)" },
   { href: "/instagram", label: "Instagram", icon: InstagramGlyph, accent: "var(--ig-1)" },
   { href: "/tiktok", label: "TikTok", icon: TikTokGlyph, accent: "var(--tt-2)" },
   { href: "/youtube", label: "YouTube", icon: YouTubeGlyph, accent: "var(--yt-1)" },
@@ -22,6 +24,7 @@ function isActive(pathname: string, href: string) {
 
 export function SideDock() {
   const pathname = usePathname();
+  const favoriteCount = useFavoritesStore((s) => Object.keys(s.items).length);
 
   return (
     <>
@@ -52,6 +55,11 @@ export function SideDock() {
                   style={active ? { borderColor: accent } : undefined}
                 >
                   <Icon size={18} strokeWidth={1.75} color={active ? accent : undefined} />
+                  {href === "/favoritos" && favoriteCount > 0 && (
+                    <span className="bg-grad-ig absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center px-0.5 font-mono text-[9px] font-bold leading-none text-white">
+                      {favoriteCount}
+                    </span>
+                  )}
                 </Link>
                 <span
                   role="tooltip"
@@ -85,6 +93,9 @@ export function SideDock() {
             >
               <Icon size={13} strokeWidth={1.75} color={active ? accent : undefined} />
               {label}
+              {href === "/favoritos" && favoriteCount > 0 && (
+                <span className="font-mono text-[9px] text-acid">{favoriteCount}</span>
+              )}
             </Link>
           );
         })}
