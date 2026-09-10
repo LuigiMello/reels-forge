@@ -1,36 +1,27 @@
-import { Rng } from "../prng";
 import type { Platform, ViralPost } from "../types";
 
-// YouTube's search.list needs a query term to return anything at all (no
-// term = 0 results, regardless of other filters), and generic terms like
-// "shorts" mostly surface global clickbait/hashtag farms. Querying by
-// Portuguese niche terms — the same niches the rest of the app uses —
-// surfaces real Brazilian creators instead.
-//
-// Cost note: search.list costs 100 quota units per call vs. the free daily
-// quota of 10,000 — each niche term below is one full search.list call, so
-// only a handful get used per fetch (see TERMS_PER_FETCH). At 4 terms ×
-// ~12 fetches/day (2h revalidate window), that's ~4,800/10,000 units/day,
-// leaving headroom for the content/account-audit pages sharing the same key.
-const QUERY_NICHES: { q: string; niche: string }[] = [
-  { q: "finanças dicas", niche: "Finanças pessoais" },
-  { q: "humor engraçado", niche: "Humor cotidiano" },
-  { q: "treino academia", niche: "Fitness & treino" },
-  { q: "receita fácil", niche: "Culinária rápida" },
-  { q: "curiosidades incrível", niche: "Curiosidades" },
-  { q: "pets engraçados", niche: "Pets" },
-  { q: "motivação sucesso", niche: "Motivacional" },
-  { q: "beleza skincare", niche: "Beleza & skincare" },
-];
+const CATEGORY_NAMES: Record<string, string> = {
+  "1": "Filmes",
+  "10": "Música",
+  "15": "Pets",
+  "17": "Esportes",
+  "19": "Viagem",
+  "20": "Games",
+  "22": "Vlog",
+  "23": "Humor",
+  "24": "Entretenimento",
+  "25": "Notícias",
+  "26": "Tutorial",
+  "27": "Educação",
+  "28": "Tecnologia",
+};
 
-const TERMS_PER_FETCH = 4;
-
-/** Picks a deterministic-per-hour subset so different niches rotate through across the day/week instead of always the same 4. */
-function pickTermsForNow(): { q: string; niche: string }[] {
-  const hourSlot = Math.floor(Date.now() / (2 * 3600_000)); // matches the 2h revalidate window
-  const rng = new Rng(`yt-trending-terms:${hourSlot}`);
-  return rng.pickMany(QUERY_NICHES, TERMS_PER_FETCH);
-}
+// Real videos ≤ this length count as "short-ish" for this feed. YouTube's
+// own "trending" chart (mostPopular) is dominated by trailers/music videos
+// in the 1-3min range — true sub-60s Shorts rarely place there — so this is
+// set generously enough to reliably return a handful of real items instead
+// of an empty feed, while still filtering out full-length videos.
+const MAX_DURATION_SEC = 180;
 
 function parseIsoDuration(iso: string): number {
   const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -46,67 +37,38 @@ interface VideoItem {
     channelId: string;
     channelTitle: string;
     publishedAt: string;
+    categoryId?: string;
     thumbnails?: { medium?: { url: string }; high?: { url: string } };
   };
   statistics?: { viewCount?: string; likeCount?: string; commentCount?: string };
   contentDetails?: { duration: string };
 }
 
-async function searchNiche(apiKey: string, q: string, publishedAfter: string): Promise<Map<string, string>> {
-  const idToNiche = new Map<string, string>();
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&order=viewCount&regionCode=BR&relevanceLanguage=pt&maxResults=6&publishedAfter=${publishedAfter}&q=${encodeURIComponent(q)}&key=${apiKey}`
-    );
-    if (!res.ok) return idToNiche;
-    const data = await res.json();
-    for (const it of data.items ?? []) {
-      const id = it.id?.videoId;
-      if (id) idToNiche.set(id, "");
-    }
-  } catch {
-    // one failed niche query shouldn't sink the whole feed
-  }
-  return idToNiche;
-}
-
 /**
- * Real trending-ish YouTube Shorts — the only one of the three platforms
- * with a free, official, public API for anything like this. There's no
- * genuine public "trending Shorts" endpoint, so this approximates it:
- * search per (Portuguese, on-brand) niche term, real duration ≤ 60s, sorted
- * by real view count among recent (last week) uploads in Brazil.
+ * Real trending videos from YouTube's own "mostPopular" chart (Brazil) —
+ * genuinely real, and cheap: `videos.list` (even with chart=) costs 1 quota
+ * unit per call vs. 100 for `search.list`, so this can refresh often without
+ * burning through the free 10,000/day quota (search.list was tried first
+ * and blew the daily quota in testing — see git history).
  */
 export async function fetchRealTrendingShorts(limit = 12): Promise<ViralPost[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) return [];
 
-  const publishedAfter = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
-  const terms = pickTermsForNow();
-
-  const results = await Promise.all(terms.map((t) => searchNiche(apiKey, t.q, publishedAfter)));
-
-  const nicheByVideoId = new Map<string, string>();
-  results.forEach((idMap, i) => {
-    for (const id of idMap.keys()) {
-      if (!nicheByVideoId.has(id)) nicheByVideoId.set(id, terms[i].niche);
-    }
-  });
-
-  const ids = Array.from(nicheByVideoId.keys());
-  if (ids.length === 0) return [];
-
-  const videosRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids.join(",")}&key=${apiKey}`
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=BR&maxResults=50&key=${apiKey}`
   );
-  if (!videosRes.ok) throw new Error(`YouTube videos.list falhou (${videosRes.status})`);
-  const videosData = await videosRes.json();
-  const items: VideoItem[] = videosData.items ?? [];
+  if (!res.ok) throw new Error(`YouTube videos.list (chart) falhou (${res.status})`);
+  const data = await res.json();
+  const items: VideoItem[] = data.items ?? [];
 
-  // search's videoDuration=short is a loose "<4min" filter — confirm true Shorts.
-  const shorts = items.filter((it) => parseIsoDuration(it.contentDetails?.duration ?? "PT0S") <= 60);
+  const shortish = items.filter((it) => {
+    const d = parseIsoDuration(it.contentDetails?.duration ?? "PT0S");
+    return d > 0 && d <= MAX_DURATION_SEC;
+  });
+  if (shortish.length === 0) return [];
 
-  const channelIds = Array.from(new Set(shorts.map((it) => it.snippet.channelId))).slice(0, 50);
+  const channelIds = Array.from(new Set(shortish.map((it) => it.snippet.channelId))).slice(0, 50);
   const subsByChannel = new Map<string, number>();
   if (channelIds.length > 0) {
     try {
@@ -124,7 +86,7 @@ export async function fetchRealTrendingShorts(limit = 12): Promise<ViralPost[]> 
     }
   }
 
-  const posts: ViralPost[] = shorts
+  const posts: ViralPost[] = shortish
     .sort((a, b) => (Number(b.statistics?.viewCount) || 0) - (Number(a.statistics?.viewCount) || 0))
     .slice(0, limit)
     .map((it) => {
@@ -142,7 +104,7 @@ export async function fetchRealTrendingShorts(limit = 12): Promise<ViralPost[]> 
       return {
         id: `yt-real-${it.id}`,
         platform: "youtube" as Platform,
-        niche: nicheByVideoId.get(it.id) ?? "Em alta",
+        niche: CATEGORY_NAMES[it.snippet.categoryId ?? ""] ?? "Em alta",
         creator: it.snippet.channelTitle,
         handle: it.snippet.channelTitle,
         followers: subsByChannel.get(it.snippet.channelId) ?? 0,
@@ -166,7 +128,7 @@ export async function fetchRealTrendingShorts(limit = 12): Promise<ViralPost[]> 
           viralScore: Math.min(viralScore, 100),
         },
         thumbnailSeed: it.id,
-        url: `https://www.youtube.com/shorts/${it.id}`,
+        url: `https://www.youtube.com/watch?v=${it.id}`,
         thumbHue: 0,
         thumbnailUrl: it.snippet.thumbnails?.high?.url ?? it.snippet.thumbnails?.medium?.url,
         isReal: true,

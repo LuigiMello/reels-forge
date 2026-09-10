@@ -9,7 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AutoRefresh } from "@/components/layout/AutoRefresh";
 import { CheckCircle2, Info, RefreshCw } from "lucide-react";
 
-const REAL_DATA_REFRESH_MS = 2 * 60 * 60 * 1000; // keep in sync with export const revalidate on the page files
+const REAL_DATA_REFRESH_MS = 15 * 60 * 1000; // keep in sync with export const revalidate on the page files
 
 export async function PlatformOverview({ cfg }: { cfg: PlatformConfig }) {
   let posts = generateDailyViral(cfg.id, todayKey()).slice(0, 6);
@@ -59,12 +59,12 @@ export async function PlatformOverview({ cfg }: { cfg: PlatformConfig }) {
             )}
             <span className="text-paper/60">
               {isReal
-                ? "Vídeos reais, em alta agora no YouTube (Brasil), via YouTube Data API — título, thumbnail, views, likes, comentários e canal verdadeiros."
+                ? "Vídeos reais, em alta agora no YouTube (Brasil) — título, thumbnail, views, likes, comentários e canal verdadeiros, via YouTube Data API."
                 : `Exemplos simulados: ${cfg.name} não tem uma API pública gratuita de "em alta" — mostrar vídeos reais aqui exigiria uma chave paga (RapidAPI/Apify).`}
             </span>
           </div>
           {isReal && (
-            <span className="tape-label flex shrink-0 items-center gap-1.5 text-paper/40" title="Atualiza sozinho a cada 2 horas">
+            <span className="tape-label flex shrink-0 items-center gap-1.5 text-paper/40" title="Atualiza sozinho a cada 15 minutos">
               <RefreshCw size={11} />
               {fetchedAt}
             </span>
