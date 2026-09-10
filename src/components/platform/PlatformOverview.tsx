@@ -1,12 +1,15 @@
 import { generateDailyViral } from "@/lib/mock/generator";
 import { fetchRealTrendingShorts } from "@/lib/youtube/real-shorts";
-import { todayKey } from "@/lib/date";
+import { todayKey, nowTimeLabel } from "@/lib/date";
 import type { PlatformConfig } from "@/lib/types";
 import { PlatformHeader } from "./PlatformHeader";
 import { TrendCard } from "@/components/research/TrendCard";
 import { Card, SectionLabel } from "@/components/ui/primitives";
 import { Footer } from "@/components/layout/Footer";
-import { CheckCircle2, Info } from "lucide-react";
+import { AutoRefresh } from "@/components/layout/AutoRefresh";
+import { CheckCircle2, Info, RefreshCw } from "lucide-react";
+
+const REAL_DATA_REFRESH_MS = 2 * 60 * 60 * 1000; // keep in sync with export const revalidate on the page files
 
 export async function PlatformOverview({ cfg }: { cfg: PlatformConfig }) {
   let posts = generateDailyViral(cfg.id, todayKey()).slice(0, 6);
@@ -24,8 +27,12 @@ export async function PlatformOverview({ cfg }: { cfg: PlatformConfig }) {
     }
   }
 
+  const fetchedAt = nowTimeLabel();
+
   return (
     <>
+      {isReal && <AutoRefresh intervalMs={REAL_DATA_REFRESH_MS} />}
+
       <PlatformHeader
         cfg={cfg}
         eyebrow={`central ${cfg.name}`}
@@ -41,19 +48,27 @@ export async function PlatformOverview({ cfg }: { cfg: PlatformConfig }) {
         <SectionLabel index="Top 6">Virais de hoje em {cfg.name}</SectionLabel>
 
         <Card
-          className="mb-6 flex items-start gap-2.5 !p-3 text-xs"
+          className="mb-6 flex items-start justify-between gap-3 !p-3 text-xs"
           accent={isReal ? "var(--acid)" : "var(--flame)"}
         >
-          {isReal ? (
-            <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-acid" />
-          ) : (
-            <Info size={14} className="mt-0.5 shrink-0 text-flame" />
+          <div className="flex items-start gap-2.5">
+            {isReal ? (
+              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-acid" />
+            ) : (
+              <Info size={14} className="mt-0.5 shrink-0 text-flame" />
+            )}
+            <span className="text-paper/60">
+              {isReal
+                ? "Vídeos reais, em alta agora no YouTube (Brasil), via YouTube Data API — título, thumbnail, views, likes, comentários e canal verdadeiros."
+                : `Exemplos simulados: ${cfg.name} não tem uma API pública gratuita de "em alta" — mostrar vídeos reais aqui exigiria uma chave paga (RapidAPI/Apify).`}
+            </span>
+          </div>
+          {isReal && (
+            <span className="tape-label flex shrink-0 items-center gap-1.5 text-paper/40" title="Atualiza sozinho a cada 2 horas">
+              <RefreshCw size={11} />
+              {fetchedAt}
+            </span>
           )}
-          <span className="text-paper/60">
-            {isReal
-              ? "Vídeos reais, em alta agora no YouTube (Brasil), via YouTube Data API — título, thumbnail, views, likes, comentários e canal verdadeiros."
-              : `Exemplos simulados: ${cfg.name} não tem uma API pública gratuita de "em alta" — mostrar vídeos reais aqui exigiria uma chave paga (RapidAPI/Apify).`}
-          </span>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

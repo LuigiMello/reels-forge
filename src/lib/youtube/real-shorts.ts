@@ -1,3 +1,4 @@
+import { Rng } from "../prng";
 import type { Platform, ViralPost } from "../types";
 
 // YouTube's search.list needs a query term to return anything at all (no
@@ -5,6 +6,12 @@ import type { Platform, ViralPost } from "../types";
 // "shorts" mostly surface global clickbait/hashtag farms. Querying by
 // Portuguese niche terms — the same niches the rest of the app uses —
 // surfaces real Brazilian creators instead.
+//
+// Cost note: search.list costs 100 quota units per call vs. the free daily
+// quota of 10,000 — each niche term below is one full search.list call, so
+// only a handful get used per fetch (see TERMS_PER_FETCH). At 4 terms ×
+// ~12 fetches/day (2h revalidate window), that's ~4,800/10,000 units/day,
+// leaving headroom for the content/account-audit pages sharing the same key.
 const QUERY_NICHES: { q: string; niche: string }[] = [
   { q: "finanças dicas", niche: "Finanças pessoais" },
   { q: "humor engraçado", niche: "Humor cotidiano" },
@@ -15,6 +22,15 @@ const QUERY_NICHES: { q: string; niche: string }[] = [
   { q: "motivação sucesso", niche: "Motivacional" },
   { q: "beleza skincare", niche: "Beleza & skincare" },
 ];
+
+const TERMS_PER_FETCH = 4;
+
+/** Picks a deterministic-per-hour subset so different niches rotate through across the day/week instead of always the same 4. */
+function pickTermsForNow(): { q: string; niche: string }[] {
+  const hourSlot = Math.floor(Date.now() / (2 * 3600_000)); // matches the 2h revalidate window
+  const rng = new Rng(`yt-trending-terms:${hourSlot}`);
+  return rng.pickMany(QUERY_NICHES, TERMS_PER_FETCH);
+}
 
 function parseIsoDuration(iso: string): number {
   const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -66,7 +82,7 @@ export async function fetchRealTrendingShorts(limit = 12): Promise<ViralPost[]> 
   if (!apiKey) return [];
 
   const publishedAfter = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
-  const terms = QUERY_NICHES.slice(0, 8);
+  const terms = pickTermsForNow();
 
   const results = await Promise.all(terms.map((t) => searchNiche(apiKey, t.q, publishedAfter)));
 

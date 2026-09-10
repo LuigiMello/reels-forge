@@ -19,3 +19,12 @@ export function todayLabel(): string {
     month: "long",
   }).format(now);
 }
+
+/** Current time as "HH:MM" in America/Sao_Paulo — for "atualizado às ..." labels. */
+export function nowTimeLabel(): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
+}
