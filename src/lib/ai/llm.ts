@@ -34,7 +34,10 @@ interface CallParams {
 
 async function callGemini({ system, user, maxTokens = 1500 }: CallParams): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY!;
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+  // maxOutputTokens on Gemini's "thinking" models is a shared budget across
+  // hidden reasoning + the visible answer — cap thinking low so a long,
+  // structured JSON answer doesn't get starved/truncated by it.
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -43,7 +46,11 @@ async function callGemini({ system, user, maxTokens = 1500 }: CallParams): Promi
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text: user }] }],
-        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.6 },
+        generationConfig: {
+          maxOutputTokens: Math.max(maxTokens, 2500),
+          temperature: 0.6,
+          thinkingConfig: { thinkingBudget: 300 },
+        },
       }),
     }
   );
@@ -52,10 +59,15 @@ async function callGemini({ system, user, maxTokens = 1500 }: CallParams): Promi
     throw new Error(`Chamada à API do Gemini falhou (${res.status}): ${errText.slice(0, 300)}`);
   }
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("");
+  const candidate = data?.candidates?.[0];
+  const text = candidate?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("");
   if (!text) {
     const blockReason = data?.promptFeedback?.blockReason;
-    throw new Error(blockReason ? `Gemini bloqueou a resposta (${blockReason}).` : "Resposta vazia do Gemini.");
+    if (blockReason) throw new Error(`Gemini bloqueou a resposta (${blockReason}).`);
+    if (candidate?.finishReason === "MAX_TOKENS") {
+      throw new Error("Gemini estourou o limite de tokens antes de terminar a resposta (aumente maxOutputTokens).");
+    }
+    throw new Error("Resposta vazia do Gemini.");
   }
   return text;
 }
