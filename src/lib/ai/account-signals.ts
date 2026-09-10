@@ -10,13 +10,24 @@ export interface AccountSignals {
   platform: Platform;
   handle: string;
   channelTitle?: string;
+  description?: string;
   realStats?: {
     subscribers?: number;
     totalViews?: number;
     videoCount?: number;
   };
   recentUploads?: RecentUpload[];
+  /** Real, computed from recentUploads timestamps — not an AI guess. */
+  uploadsPerWeek?: number;
   sourceNote: string;
+}
+
+function computeUploadsPerWeek(uploads: RecentUpload[]): number | undefined {
+  if (uploads.length < 2) return undefined;
+  const dates = uploads.map((u) => new Date(u.publishedAt).getTime()).sort((a, b) => b - a);
+  const spanDays = (dates[0] - dates[dates.length - 1]) / (1000 * 60 * 60 * 24);
+  if (spanDays <= 0) return undefined;
+  return Math.round(((uploads.length - 1) / spanDays) * 7 * 10) / 10;
 }
 
 async function fetchYouTubeAccountSignals(handleInput: string): Promise<AccountSignals> {
@@ -50,32 +61,61 @@ async function fetchYouTubeAccountSignals(handleInput: string): Promise<AccountS
     let recentUploads: RecentUpload[] | undefined;
     try {
       const searchRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=6&type=video&key=${apiKey}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=8&type=video&key=${apiKey}`
       );
       if (searchRes.ok) {
         const searchData = await searchRes.json();
-        recentUploads = (searchData.items ?? []).map(
-          (it: { snippet: { title: string; publishedAt: string } }) => ({
-            title: it.snippet.title,
-            publishedAt: it.snippet.publishedAt,
-          })
-        );
+        const items: { id: { videoId: string }; snippet: { title: string; publishedAt: string } }[] = searchData.items ?? [];
+        recentUploads = items.map((it) => ({ title: it.snippet.title, publishedAt: it.snippet.publishedAt }));
+
+        // Bonus: fetch real view counts for those uploads (one batched call).
+        const ids = items.map((it) => it.id?.videoId).filter(Boolean).join(",");
+        if (ids) {
+          try {
+            const videosRes = await fetch(
+              `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${apiKey}`
+            );
+            if (videosRes.ok) {
+              const videosData = await videosRes.json();
+              const viewsById = new Map<string, number>(
+                (videosData.items ?? []).map((v: { id: string; statistics?: { viewCount?: string } }) => [
+                  v.id,
+                  Number(v.statistics?.viewCount) || 0,
+                ])
+              );
+              recentUploads = items.map((it) => ({
+                title: it.snippet.title,
+                publishedAt: it.snippet.publishedAt,
+                viewCount: viewsById.get(it.id?.videoId) ?? undefined,
+              }));
+            }
+          } catch {
+            // view counts are a bonus signal, not required
+          }
+        }
       }
     } catch {
       // recent uploads are a bonus signal, not required
     }
 
+    const uploadsPerWeek = recentUploads ? computeUploadsPerWeek(recentUploads) : undefined;
+
     return {
       platform: "youtube",
       handle: `@${handle}`,
       channelTitle: channel.snippet?.title,
+      description: channel.snippet?.description,
       realStats: {
         subscribers: Number(channel.statistics?.subscriberCount) || undefined,
         totalViews: Number(channel.statistics?.viewCount) || undefined,
         videoCount: Number(channel.statistics?.videoCount) || undefined,
       },
       recentUploads,
-      sourceNote: "Dados reais via YouTube Data API (inscritos, views totais, nº de vídeos e uploads recentes públicos).",
+      uploadsPerWeek,
+      sourceNote:
+        "Dados reais via YouTube Data API: inscritos, views totais, nº de vídeos, descrição do canal, uploads recentes com views reais" +
+        (uploadsPerWeek !== undefined ? " e frequência de postagem calculada a partir das datas reais" : "") +
+        ".",
     };
   } catch {
     return {

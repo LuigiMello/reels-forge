@@ -50,6 +50,10 @@ async function callGemini({ system, user, maxTokens = 1500 }: CallParams): Promi
           maxOutputTokens: Math.max(maxTokens, 2500),
           temperature: 0.6,
           thinkingConfig: { thinkingBudget: 300 },
+          // Forces syntactically valid JSON out of the model — real-world
+          // titles/comments often contain quotes that break naive JSON
+          // written as free text.
+          responseMimeType: "application/json",
         },
       }),
     }
@@ -82,6 +86,7 @@ async function callGroq({ system, user, maxTokens = 1500 }: CallParams): Promise
       model,
       max_tokens: maxTokens,
       temperature: 0.6,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -142,5 +147,12 @@ export function extractJson<T>(text: string): T {
   if (start === -1 || end === -1 || end < start) {
     throw new Error("Não encontrei um JSON válido na resposta da IA.");
   }
-  return JSON.parse(candidate.slice(start, end + 1)) as T;
+  const jsonSlice = candidate.slice(start, end + 1);
+  try {
+    return JSON.parse(jsonSlice) as T;
+  } catch {
+    // Cheap repair pass for the most common slip (trailing commas) before giving up.
+    const repaired = jsonSlice.replace(/,(\s*[}\]])/g, "$1");
+    return JSON.parse(repaired) as T;
+  }
 }

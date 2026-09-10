@@ -2,22 +2,26 @@
 
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Info, Loader2, Search, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
-import type { AiAccountAudit, PlatformConfig } from "@/lib/types";
+import type { AiAccountAudit, AuditCriterion, PlatformConfig } from "@/lib/types";
 import { generateAccountAudit } from "@/lib/mock/generator";
 import { Button, Card, ScoreGauge, SectionLabel, StatNumber } from "@/components/ui/primitives";
 import { formatCompact } from "@/lib/format";
 
-const SUB_SCORES: { key: keyof AiAccountAudit; label: string }[] = [
-  { key: "growthScore", label: "Crescimento" },
-  { key: "consistencyScore", label: "Consistência" },
-  { key: "hookScore", label: "Ganchos" },
-  { key: "formatScore", label: "Variedade de formato" },
+const CRITERIA_ROWS: { key: keyof AiAccountAudit["criteria"]; label: string }[] = [
+  { key: "growth", label: "Crescimento" },
+  { key: "consistency", label: "Consistência" },
+  { key: "hook", label: "Ganchos (títulos)" },
+  { key: "format", label: "Variedade de formato" },
 ];
 
 const MODE_META: Record<AiAccountAudit["mode"], { label: string; color: string; icon: typeof CheckCircle2 }> = {
   "real-data": { label: "análise com dados reais da conta", color: "var(--acid)", icon: CheckCircle2 },
   "guidance-only": { label: "orientação geral (conta não encontrada / API não disponível)", color: "var(--flame)", icon: AlertTriangle },
 };
+
+function mockCriterion(score: number, note: string): AuditCriterion {
+  return { score, note };
+}
 
 export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
   const [handle, setHandle] = useState("");
@@ -50,6 +54,7 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "Falha ao analisar.");
       const mock = generateAccountAudit(cfg.id, trimmed);
+      const demoNote = "estimativa genérica — modo demonstração, configure uma chave de IA para uma nota real";
       setAudit({
         mode: "guidance-only",
         platform: cfg.id,
@@ -64,6 +69,12 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
         bestPostingWindow: mock.bestPostingWindow,
         topFormat: mock.topFormat,
         summary: "Auditoria de demonstração — configure GEMINI_API_KEY (gratuita, e YOUTUBE_API_KEY para YouTube) para uma avaliação real.",
+        criteria: {
+          growth: mockCriterion(mock.growthScore, demoNote),
+          consistency: mockCriterion(mock.consistencyScore, demoNote),
+          hook: mockCriterion(mock.hookScore, demoNote),
+          format: mockCriterion(mock.formatScore, demoNote),
+        },
         strengths: mock.strengths,
         risks: mock.risks,
         recommendations: mock.recommendations,
@@ -101,8 +112,10 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
         </Button>
       </form>
       <p className="mt-3 text-xs text-paper/40">
-        {cfg.id === "youtube"
-          ? "Busca o canal real via YouTube Data API (inscritos, views, uploads recentes) e usa isso na análise."
+        {loading
+          ? "Buscando inscritos, views, uploads recentes e analisando crescimento, consistência, ganchos e formato — pode levar até 1 minuto pra ser bem detalhado."
+          : cfg.id === "youtube"
+          ? "Busca o canal real via YouTube Data API (inscritos, views, descrição, uploads recentes com views reais e frequência de postagem calculada) e usa tudo isso na análise."
           : "Instagram e TikTok não têm API pública gratuita de conta — a IA avalia com base em boas práticas gerais e é honesta sobre essa limitação."}
       </p>
 
@@ -134,6 +147,10 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
                   <StatNumber label="Inscritos" value={audit.realStats.subscribers ? formatCompact(audit.realStats.subscribers) : "—"} />
                   <StatNumber label="Views totais" value={audit.realStats.totalViews ? formatCompact(audit.realStats.totalViews) : "—"} />
                   <StatNumber label="Vídeos" value={audit.realStats.videoCount ? formatCompact(audit.realStats.videoCount) : "—"} />
+                  <StatNumber
+                    label="Posts/semana"
+                    value={audit.uploadsPerWeek !== undefined ? String(audit.uploadsPerWeek) : "—"}
+                  />
                   <StatNumber label="Melhor horário" value={audit.bestPostingWindow} />
                   <StatNumber label="Formato-chave" value={audit.topFormat} />
                 </div>
@@ -152,16 +169,20 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
               <TrendingUp size={13} className="text-signal" />
               Notas por dimensão
             </p>
-            <div className="flex flex-col gap-3">
-              {SUB_SCORES.map(({ key, label }) => {
-                const value = audit[key] as number;
+            <div className="flex flex-col gap-4">
+              {CRITERIA_ROWS.map(({ key, label }) => {
+                const c = audit.criteria?.[key];
+                if (!c) return null;
                 return (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className="w-40 shrink-0 text-xs text-paper/60">{label}</span>
-                    <div className="h-2 flex-1 bg-ink">
-                      <div className="h-2" style={{ width: `${value}%`, background: cfg.colorA }} />
+                  <div key={key}>
+                    <div className="flex items-center gap-3">
+                      <span className="w-40 shrink-0 text-xs text-paper/60">{label}</span>
+                      <div className="h-2 flex-1 bg-ink">
+                        <div className="h-2" style={{ width: `${c.score}%`, background: cfg.colorA }} />
+                      </div>
+                      <span className="w-8 shrink-0 text-right font-mono text-xs text-paper">{c.score}</span>
                     </div>
-                    <span className="w-8 shrink-0 text-right font-mono text-xs text-paper">{value}</span>
+                    {c.note && <p className="mt-1.5 pl-[10.5rem] text-xs leading-relaxed text-paper/45">{c.note}</p>}
                   </div>
                 );
               })}
@@ -173,10 +194,15 @@ export function PlatformAccountAudit({ cfg }: { cfg: PlatformConfig }) {
               <p className="tape-label mb-3 text-paper/50">Uploads recentes usados na análise</p>
               <ul className="flex flex-col gap-2 text-sm text-paper/70">
                 {audit.recentUploads.map((u) => (
-                  <li key={u.title + u.publishedAt} className="flex justify-between gap-3 border-t border-line pt-2 first:border-t-0 first:pt-0">
+                  <li key={u.title + u.publishedAt} className="flex items-center justify-between gap-3 border-t border-line pt-2 first:border-t-0 first:pt-0">
                     <span className="truncate">{u.title}</span>
-                    <span className="tape-label shrink-0 text-paper/30">
-                      {new Date(u.publishedAt).toLocaleDateString("pt-BR")}
+                    <span className="flex shrink-0 items-center gap-3">
+                      {u.viewCount !== undefined && (
+                        <span className="font-mono text-xs text-paper/50">{formatCompact(u.viewCount)} views</span>
+                      )}
+                      <span className="tape-label text-paper/30">
+                        {new Date(u.publishedAt).toLocaleDateString("pt-BR")}
+                      </span>
                     </span>
                   </li>
                 ))}

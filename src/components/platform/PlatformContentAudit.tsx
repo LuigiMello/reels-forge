@@ -1,20 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Info, Loader2, Sparkles, Wand2 } from "lucide-react";
-import type { AiContentAudit, PlatformConfig } from "@/lib/types";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Loader2,
+  MessageCircle,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
+import type { AiContentAudit, AuditCriterion, PlatformConfig } from "@/lib/types";
 import { auditContentUrl } from "@/lib/content-audit";
 import { Button, Card, ScoreGauge, SectionLabel } from "@/components/ui/primitives";
 import { formatCompact, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const SCORE_ROWS: { key: keyof AiContentAudit; label: string }[] = [
-  { key: "hookScore", label: "Força do gancho" },
-  { key: "pacingScore", label: "Ritmo de edição" },
-  { key: "captionScore", label: "Legenda" },
-  { key: "hashtagScore", label: "Hashtags" },
-  { key: "soundScore", label: "Som/trilha" },
-  { key: "ctaScore", label: "Call-to-action" },
+const CRITERIA_ROWS: { key: keyof AiContentAudit["criteria"]; label: string }[] = [
+  { key: "hook", label: "Gancho / hook" },
+  { key: "caption", label: "Legenda / descrição" },
+  { key: "hashtags", label: "Hashtags" },
+  { key: "cta", label: "Call-to-action" },
+  { key: "pacing", label: "Ritmo de edição" },
+  { key: "sound", label: "Som / trilha" },
+  { key: "style", label: "Estilo visual" },
 ];
 
 const MODE_META: Record<AiContentAudit["mode"], { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -22,6 +31,10 @@ const MODE_META: Record<AiContentAudit["mode"], { label: string; color: string; 
   "metadata-only": { label: "análise com metadados públicos", color: "var(--signal)", icon: Info },
   "guidance-only": { label: "orientação geral (sem dados do link)", color: "var(--flame)", icon: AlertTriangle },
 };
+
+function mockCriterion(score: number, note: string): AuditCriterion {
+  return { score, note };
+}
 
 export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
   const [url, setUrl] = useState("");
@@ -54,6 +67,7 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "Falha ao analisar.");
       const mock = auditContentUrl(cfg.id, trimmed);
+      const demoNote = "estimativa genérica — modo demonstração, configure uma chave de IA para uma nota real";
       setAudit({
         mode: "guidance-only",
         platform: cfg.id,
@@ -67,8 +81,18 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
         hashtagScore: mock.hashtagScore,
         soundScore: mock.soundScore,
         ctaScore: mock.ctaScore,
+        styleScore: mock.pacingScore,
         predictedRetention: mock.predictedRetention,
         summary: "Análise de demonstração — configure GEMINI_API_KEY (gratuita) para uma avaliação real.",
+        criteria: {
+          hook: mockCriterion(mock.hookScore, demoNote),
+          pacing: mockCriterion(mock.pacingScore, demoNote),
+          caption: mockCriterion(mock.captionScore, demoNote),
+          hashtags: mockCriterion(mock.hashtagScore, demoNote),
+          sound: mockCriterion(mock.soundScore, demoNote),
+          cta: mockCriterion(mock.ctaScore, demoNote),
+          style: mockCriterion(mock.pacingScore, demoNote),
+        },
         diagnosis: mock.diagnosis,
         fixes: mock.fixes,
       });
@@ -105,8 +129,9 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
         </Button>
       </form>
       <p className="mt-3 text-xs text-paper/40">
-        A IA usa dados públicos reais quando consegue buscá-los (YouTube Data API, oEmbed) e é
-        transparente quando não consegue — nunca finge ter assistido ao vídeo.
+        {loading
+          ? "Buscando dados públicos reais e analisando gancho, legenda, hashtags, CTA, ritmo, som e estilo — pode levar até 1 minuto pra ser bem detalhado."
+          : "Análise detalhada de gancho, legenda, hashtags, CTA, ritmo, som e estilo — com dados públicos reais quando consegue buscá-los (YouTube Data API, oEmbed). Nunca finge ter assistido ao vídeo."}
       </p>
 
       {audit && (
@@ -137,6 +162,12 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
                     {formatCompact(audit.realStats.views)} views reais
                   </p>
                 )}
+                {audit.channelAvgViews !== undefined && audit.realStats?.views !== undefined && (
+                  <p className="font-mono text-xs text-paper/60">
+                    {audit.realStats.views >= audit.channelAvgViews ? "acima" : "abaixo"} da média
+                    do canal ({formatCompact(audit.channelAvgViews)})
+                  </p>
+                )}
               </div>
               {audit.summary && <p className="text-xs leading-relaxed text-paper/50">{audit.summary}</p>}
             </Card>
@@ -144,21 +175,62 @@ export function PlatformContentAudit({ cfg }: { cfg: PlatformConfig }) {
             <div className="flex flex-col gap-6">
               <Card>
                 <p className="tape-label mb-4 text-paper/50">Notas por critério</p>
-                <div className="flex flex-col gap-3">
-                  {SCORE_ROWS.map(({ key, label }) => {
-                    const value = audit[key] as number;
+                <div className="flex flex-col gap-4">
+                  {CRITERIA_ROWS.map(({ key, label }) => {
+                    const c = audit.criteria?.[key];
+                    if (!c) return null;
                     return (
-                      <div key={key} className="flex items-center gap-3">
-                        <span className="w-32 shrink-0 text-xs text-paper/60">{label}</span>
-                        <div className="h-2 flex-1 bg-ink">
-                          <div className="h-2" style={{ width: `${value}%`, background: cfg.colorA }} />
+                      <div key={key}>
+                        <div className="flex items-center gap-3">
+                          <span className="w-32 shrink-0 text-xs text-paper/60">{label}</span>
+                          <div className="h-2 flex-1 bg-ink">
+                            <div className="h-2" style={{ width: `${c.score}%`, background: cfg.colorA }} />
+                          </div>
+                          <span className="w-8 shrink-0 text-right font-mono text-xs text-paper">{c.score}</span>
                         </div>
-                        <span className="w-8 shrink-0 text-right font-mono text-xs text-paper">{value}</span>
+                        {c.note && <p className="mt-1.5 pl-[8.5rem] text-xs leading-relaxed text-paper/45">{c.note}</p>}
                       </div>
                     );
                   })}
                 </div>
               </Card>
+
+              {(audit.caption || (audit.hashtags && audit.hashtags.length > 0)) && (
+                <Card>
+                  <p className="tape-label mb-3 text-paper/50">Legenda e hashtags analisadas</p>
+                  {audit.caption && (
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-paper/70">{audit.caption}</p>
+                  )}
+                  {audit.hashtags && audit.hashtags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {audit.hashtags.map((h) => (
+                        <span key={h} className="font-mono text-xs text-signal">
+                          {h}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              {audit.commentSamples && audit.commentSamples.length > 0 && (
+                <Card>
+                  <p className="tape-label mb-3 flex items-center gap-1.5 text-paper/50">
+                    <MessageCircle size={13} className="text-signal" />
+                    Comentários reais analisados
+                  </p>
+                  {audit.commentInsight && (
+                    <p className="mb-3 text-sm text-paper/70">{audit.commentInsight}</p>
+                  )}
+                  <ul className="flex flex-col gap-2 border-t border-line pt-3 text-xs text-paper/50">
+                    {audit.commentSamples.map((c) => (
+                      <li key={c} className="italic">
+                        “{c}”
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <Card>

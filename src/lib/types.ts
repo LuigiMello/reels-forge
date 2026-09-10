@@ -85,14 +85,24 @@ export interface ContentAudit {
   fixes: string[];
 }
 
+/** One scored dimension with a one-sentence "why" — the vidIQ-style breakdown. */
+export interface AuditCriterion {
+  score: number;
+  note: string;
+}
+
 /** Real, AI-written analysis — grounded in whatever public data could actually be fetched. */
 export interface AiContentAudit {
   mode: "real-data" | "metadata-only" | "guidance-only";
   platform: Platform;
   url: string;
   title?: string;
+  caption?: string;
   authorName?: string;
   thumbnailUrl?: string;
+  hashtags?: string[];
+  commentSamples?: string[];
+  channelAvgViews?: number;
   realStats?: { views?: number; likes?: number; comments?: number; durationSec?: number };
   dataNote: string;
   overallScore: number;
@@ -102,8 +112,19 @@ export interface AiContentAudit {
   hashtagScore: number;
   soundScore: number;
   ctaScore: number;
+  styleScore: number;
   predictedRetention: number;
   summary: string;
+  criteria: {
+    hook: AuditCriterion;
+    pacing: AuditCriterion;
+    caption: AuditCriterion;
+    hashtags: AuditCriterion;
+    sound: AuditCriterion;
+    cta: AuditCriterion;
+    style: AuditCriterion;
+  };
+  commentInsight?: string;
   diagnosis: string[];
   fixes: string[];
 }
@@ -114,7 +135,8 @@ export interface AiAccountAudit {
   handle: string;
   channelTitle?: string;
   realStats?: { subscribers?: number; totalViews?: number; videoCount?: number };
-  recentUploads?: { title: string; publishedAt: string }[];
+  recentUploads?: { title: string; publishedAt: string; viewCount?: number }[];
+  uploadsPerWeek?: number;
   dataNote: string;
   overallScore: number;
   growthScore: number;
@@ -124,6 +146,12 @@ export interface AiAccountAudit {
   bestPostingWindow: string;
   topFormat: string;
   summary: string;
+  criteria: {
+    growth: AuditCriterion;
+    consistency: AuditCriterion;
+    hook: AuditCriterion;
+    format: AuditCriterion;
+  };
   strengths: string[];
   risks: string[];
   recommendations: string[];
